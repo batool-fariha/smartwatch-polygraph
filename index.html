@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trust Check</title>
+<title>Polygraph: is your smartwatch lying to you?</title>
+<meta name="description" content="Upload your Apple Health export. Polygraph compares your sleep, steps and heart rate against each other and lists every place they disagree. Runs in your browser.">
+<meta name="theme-color" content="#f7f4ed">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -40,14 +45,9 @@ main{max-width:1080px;margin:0 auto;padding:0 24px;position:relative}
    radial-gradient(40% 30% at 50% 62%,rgba(255,255,255,.75),transparent 75%),
    linear-gradient(180deg,#ffeed6 0%,#fff6e6 38%,rgba(247,244,237,0) 100%)}
 
-.hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center;padding:80px 0 0}
-.hero-side{display:flex;flex-direction:column;gap:14px}
-.peek{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:rgba(255,253,249,.7);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;font-weight:400;cursor:pointer;transition:border-color .15s,background .15s}
-.peek:hover{border-color:var(--orange);background:var(--card)}
-.peek svg.ringm{width:52px;height:52px;flex:none}
-.peek b{display:block;font-size:14.5px;font-weight:600}
-.peek i{display:block;font-style:normal;font-size:13px;color:var(--muted)}
-.peek .go{margin-left:auto;width:18px;height:18px;color:var(--orange);flex:none}
+.hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;padding:64px 0 0}
+.cta{margin-top:32px}
+a.btn{display:inline-block;text-decoration:none}
 .hero-t{padding:0}
 .hero-t .k{margin-bottom:24px}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:44px;padding-top:56px}}
@@ -79,6 +79,45 @@ details ol{margin:10px 0 0;padding-left:20px}
 .bar{height:5px;background:var(--h0);border-radius:99px;overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--orange);border-radius:99px;transition:width .1s}
 #err{color:var(--h1);margin-top:14px;display:none;font-size:15px}
+
+
+/* hero watch */
+.stage{position:relative;width:100%;max-width:520px;aspect-ratio:1/1;margin-inline:auto;cursor:pointer;--e:cubic-bezier(.2,.8,.2,1)}
+.watch{position:absolute;left:19%;width:62%;top:50%;transform:translateY(-50%);height:auto;filter:drop-shadow(0 34px 34px rgba(255,122,0,.28))}
+.chips{display:contents}
+.chip{position:absolute;max-width:142px;background:rgba(255,253,249,.9);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:14px;padding:9px 12px;font-size:12.5px;line-height:1.3;color:var(--ink);box-shadow:0 10px 26px -14px rgba(23,23,26,.3)}
+.chip.l{left:0}.chip.r{right:0}
+.chip b{display:flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;font-weight:600}
+.chip b i{width:7px;height:7px;border-radius:50%;display:block}
+.stage.go .strap-t{animation:dropT .9s var(--e) backwards}
+.stage.go .strap-b{animation:dropB .9s var(--e) backwards}
+.stage.go .case{animation:caseIn .9s var(--e) .1s backwards;transform-origin:180px 220px}
+.stage.go .crown{animation:crown .6s var(--e) .55s backwards}
+.stage.go .rg{animation:gather 1.1s var(--e) var(--dl) backwards;transform-origin:180px 220px}
+.stage.go .arc{animation:draw .9s var(--e) calc(var(--dl) + .45s) backwards}
+.stage.go .arc.hr{animation:draw .9s var(--e) calc(var(--dl) + .45s) backwards,glitch .6s steps(1) 2.55s}
+.stage.go #wscore{animation:fadeS .5s ease 1.5s backwards}
+.stage.go .chip{animation:pop .55s var(--e) var(--dl) backwards}
+@keyframes dropT{from{transform:translateY(-90px);opacity:0}}
+@keyframes dropB{from{transform:translateY(90px);opacity:0}}
+@keyframes caseIn{from{transform:scale(.86);opacity:0}}
+@keyframes crown{from{transform:translateX(26px);opacity:0}}
+@keyframes gather{from{transform:rotate(-150deg) scale(1.4);opacity:0}}
+@keyframes draw{from{stroke-dashoffset:var(--c)}}
+@keyframes fadeS{from{opacity:0}}
+@keyframes glitch{15%{transform:translate(-3px,1px)}30%{transform:translate(3px,-1px);filter:brightness(1.7)}45%{transform:translate(-2px,0)}60%{transform:translate(2px,1px)}75%{transform:none;filter:none}}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.95)}}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:36px;padding-top:48px}.stage{max-width:440px}}
+@media (max-width:600px){.stage{aspect-ratio:auto;max-width:none}.watch{position:static;transform:none;display:block;width:62%;margin:0 auto}.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}.chip{position:static;max-width:none}}
+
+/* check section */
+.checkgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:start}
+.steps ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.steps li{display:grid;grid-template-columns:44px 1fr;gap:6px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line)}
+.steps li span{font:400 34px/1 var(--serif);color:var(--orange)}
+.steps li p{margin:0;font-size:16px;color:var(--muted);line-height:1.45}
+.steps li b{color:var(--ink);font-weight:600}
+@media (max-width:900px){.checkgrid{grid-template-columns:1fr;gap:36px}}
 
 /* section heads */
 .sec{margin:104px 0 0}
@@ -194,7 +233,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3.4 13.5H10.1L12.4 4.9L15 19.1L16.9 13.5H20.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="i-steps" viewBox="0 0 24 24"><ellipse cx="8" cy="8" rx="3" ry="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 15.500h4.500v3a2.250 2.250 0 0 1-4.500 0v-3ZM16.500 10c1.500 0 2.500 1.400 2.500 3.200s-1 2.800-2.500 2.800S14 15 14 13.200 15 10 16.500 10ZM14.800 18.500H18v1.500a1.600 1.600 0 0 1-3.200 0v-1.500Z" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.500S3.500 15.300 3.500 9.200A4.700 4.700 0 0 1 12 6.800a4.700 4.700 0 0 1 8.500 2.400C20.500 15.300 12 20.500 12 20.500Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
@@ -205,7 +244,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 </defs></svg>
 
 <nav><div>
-  <a class="brand" href="#top" data-go="top"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Trust Check</a>
+  <a class="brand" href="#top" data-go="top"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Polygraph</a>
   <span class="r"><a href="#method" data-go="method">How it works</a><a href="#limits" data-go="limits">Limits</a><a href="#privacy" data-go="privacy">Privacy</a></span>
 </div></nav>
 
@@ -213,14 +252,43 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
   <div id="landing">
     <div class="heroband" aria-hidden="true"></div>
     <div class="hero-grid">
-    <header class="hero-t in">
-      <p class="k"><span class="n">●</span> A data-quality check for Apple Health</p>
-      <h1>Is your smartwatch <em>lying</em> to you?</h1>
-      <p class="lede">Upload your Apple Health export. This page compares your sleep, steps and heart rate against each other and lists every place they disagree.</p>
-    </header>
+      <header class="hero-t in">
+        <p class="k"><span class="n">●</span> A data-quality check for Apple Health</p>
+        <h1>Is your smartwatch <em>lying</em> to you?</h1>
+        <p class="lede">Upload your Apple Health export. This page compares your sleep, steps and heart rate against each other and lists every place they disagree.</p>
+        <div class="row cta"><a class="btn primary" href="#check">Check your data</a><button class="ghost" id="heroDemo" type="button">See a sample result</button></div>
+      </header>
 
-    <div class="hero-side">
-    <section class="drop in" id="drop" style="animation-delay:.08s">
+      <div class="stage" id="stage" role="group" aria-label="Animated smartwatch. Click to replay.">
+        <svg class="watch" viewBox="0 0 360 440" role="img" aria-label="A smartwatch whose four data rings come together to show a trust score of 87">
+          <g class="strap-t"><path d="M128 112 L138 6 Q140 0 146 0 H214 Q220 0 222 6 L232 112 Z" fill="var(--orange)"/><path d="M146 16h68" stroke="rgba(23,23,26,.2)" stroke-width="2" stroke-dasharray="4 5"/></g>
+          <g class="strap-b"><path d="M128 328 L138 434 Q140 440 146 440 H214 Q220 440 222 434 L232 328 Z" fill="var(--orange)"/><circle cx="180" cy="372" r="4" fill="rgba(23,23,26,.28)"/><circle cx="180" cy="394" r="4" fill="rgba(23,23,26,.28)"/><circle cx="180" cy="416" r="4" fill="rgba(23,23,26,.28)"/></g>
+          <g class="crown"><rect x="292" y="168" width="9" height="42" rx="4.500" fill="#2b2b30"/><rect x="292" y="224" width="6" height="26" rx="3" fill="#2b2b30"/></g>
+          <g class="case"><rect x="70" y="95" width="220" height="250" rx="58" fill="#17171a"/><rect x="82" y="107" width="196" height="226" rx="47" fill="#0c0c0e"/><path d="M98 122Q180 104 262 122V148Q180 132 98 148Z" fill="#fff" opacity=".05"/></g>
+          <g class="rg" style="--dl:.55s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="80" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc" cx="180" cy="220" r="80" fill="none" stroke="#ffd60a" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:502.65;--c:502.65;--off:15.08;stroke-dashoffset:15.08"/></g></g>
+          <g class="rg" style="--dl:.68s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="64" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc" cx="180" cy="220" r="64" fill="none" stroke="#ff7a00" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:402.12;--c:402.12;--off:164.87;stroke-dashoffset:164.87"/></g></g>
+          <g class="rg" style="--dl:.81s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="48" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc hr" cx="180" cy="220" r="48" fill="none" stroke="#ff5a1f" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:301.59;--c:301.59;--off:6.03;stroke-dashoffset:6.03"/></g></g>
+          <g class="rg" style="--dl:.94s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="32" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc" cx="180" cy="220" r="32" fill="none" stroke="#ffb400" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:201.06;--c:201.06;--off:10.05;stroke-dashoffset:10.05"/></g></g>
+          <text id="wscore" x="180" y="232" text-anchor="middle" fill="#f7f4ed" style="font:400 40px var(--serif)">87</text>
+          <text x="180" y="248" text-anchor="middle" fill="#a8a296" style="font:600 7.5px var(--sans);letter-spacing:.16em">TRUST</text>
+        </svg>
+        <div class="chips">
+          <div class="chip l" style="top:9%;--dl:2.7s"><b><i style="background:#ffd60a"></i>Sleep</b>22 readings over 90 bpm</div>
+          <div class="chip r" style="top:33%;--dl:2.86s"><b><i style="background:#ff7a00"></i>Steps</b>3,450 counted twice</div>
+          <div class="chip l" style="top:58%;--dl:3.02s"><b><i style="background:#ff5a1f"></i>Heart rate</b>One 184 bpm blip</div>
+          <div class="chip r" style="top:80%;--dl:3.18s"><b><i style="background:#ffb400"></i>Coverage</b>Dark at 07:00</div>
+        </div>
+      </div>
+    </div>
+
+    <section class="sec" id="check">
+      <p class="k"><span class="n">01</span> Check yours</p>
+      <div class="sechead">
+        <h2>Drop in your <em>export</em></h2>
+        <p>Export from the Health app and drop the file here. It’s read in this tab and never uploaded.</p>
+      </div>
+      <div class="checkgrid">
+        <section class="drop in" id="drop" style="animation-delay:.08s">
       <h3>Drop your export here</h3>
       <p>export.zip or export.xml, straight from the Health app.</p>
       <div class="row">
@@ -230,23 +298,23 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
       </div>
       <div class="dropmeta">
         <p class="priv">The file is read in this tab and never uploaded.</p>
-      <details><summary>Where do I find the export?</summary>
-        <ol><li>Open the Health app and tap your profile picture.</li><li>Tap <b>Export All Health Data</b>, then <b>Export</b>.</li><li>Wait for it to finish, then AirDrop or save <b>export.zip</b> to this computer.</li></ol>
-      </details>
       </div>
       <div id="prog"><div class="bar"><i id="pbar"></i></div><p class="priv" id="ptxt">Reading…</p></div>
       <div id="err" role="alert"></div>
     </section>
-      <button type="button" class="peek" id="peek" aria-label="See a sample result">
-        <svg class="ringm" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="none" stroke="var(--h0)" stroke-width="5"/><circle cx="26" cy="26" r="22" fill="none" stroke="var(--orange)" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="18" transform="rotate(-90 26 26)"/><text x="26" y="31" text-anchor="middle" style="font:400 17px var(--serif)" fill="var(--ink)">87</text></svg>
-        <span><b>See a sample result</b><i>Mostly honest · 3 of 58 nights contradicted</i></span>
-        <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-      </button>
-    </div>
-    </div>
+        <div class="steps">
+          <p class="k">Where to find it</p>
+          <ol>
+            <li><span>1</span><p><b>Open Health</b> and tap your profile picture.</p></li>
+            <li><span>2</span><p>Tap <b>Export All Health Data</b>, then <b>Export</b>.</p></li>
+            <li><span>3</span><p>Save <b>export.zip</b> to this computer and drop it in the card.</p></li>
+          </ol>
+        </div>
+      </div>
+    </section>
 
     <section class="sec">
-      <p class="k"><span class="n">01</span> What it looks for</p>
+      <p class="k"><span class="n">02</span> What it looks for</p>
       <div class="sechead">
         <h2>Places where your watch <em>contradicts</em> itself</h2>
         <p>Four checks run on every export. Each one compares signals that should agree with each other.</p>
@@ -330,7 +398,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
     </section>
 
     <section class="sec" id="method">
-      <p class="k"><span class="n">02</span> How it works</p>
+      <p class="k"><span class="n">03</span> How it works</p>
       <div class="sechead">
         <h2>One number, <em>four parts</em></h2>
         <p>Each check becomes a score out of 100. The four are weighted into the one number you see.</p>
@@ -345,7 +413,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
     </section>
 
     <section class="sec" id="limits">
-      <p class="k"><span class="n">03</span> Limits</p>
+      <p class="k"><span class="n">04</span> Limits</p>
       <div class="sechead">
         <h2>What this <em>can’t</em> tell you</h2>
         <p>A short list of what this check can’t see, so the score doesn’t get over-read.</p>
@@ -383,7 +451,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 
 <footer>
   <div class="foot">
-    <span class="brand"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Trust Check</span>
+    <span class="brand"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Polygraph</span>
     <span class="cr" id="credit"></span>
     <p class="tg">Free, no account. Your health data never leaves your browser.</p>
     <span class="r"><a href="#method" data-go="method">How scoring works</a><span class="ic" id="social"></span></span>
@@ -411,6 +479,26 @@ const SITE = {
     .filter(([, , u]) => u).map(([n, i, u]) => `<a href="${esc(u)}" rel="noopener" title="${n}" aria-label="${n}"><svg><use href="#i-${i}"/></svg></a>`).join('');
 })();
 
+
+/* hero watch: replayable assembly animation */
+(function () {
+  const stage = $('#stage'), score = $('#wscore');
+  if (!stage) return;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function count() {
+    const t0 = performance.now() + 1700, dur = 800;
+    score.textContent = '0';
+    (function f(now) {
+      const p = Math.min(1, Math.max(0, (now - t0) / dur));
+      score.textContent = p < 1 ? Math.round(87 * (1 - Math.pow(1 - p, 3))) : 87;
+      if (p < 1) requestAnimationFrame(f);
+    })(performance.now());
+  }
+  function play() { if (reduce) return; stage.classList.remove('go'); void stage.offsetWidth; stage.classList.add('go'); count(); }
+  stage.addEventListener('click', play);
+  play();
+})();
+
 /* gap illustration: 5 days x 24 hours, the 07:00 column mostly empty */
 (function () {
   let h = '';
@@ -435,7 +523,7 @@ drop.addEventListener('drop', (ev) => { const f = ev.dataTransfer.files[0]; if (
 $('#file').addEventListener('change', (ev) => { const f = ev.target.files[0]; if (f) run(f); });
 $('#pick').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('#file').click(); } });
 $('#demo').addEventListener('click', () => run(new File([WearableSample.generate({ days: 60, seed: 7 }).xml], 'sample-export.xml')));
-$('#peek').addEventListener('click', () => $('#demo').click());
+$('#heroDemo').addEventListener('click', () => $('#demo').click());
 $('#again').addEventListener('click', () => { showLanding(); window.scrollTo(0, 0); });
 $('#share').addEventListener('click', shareCard);
 

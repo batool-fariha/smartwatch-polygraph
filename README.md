@@ -1,6 +1,6 @@
-# Trust Check
+# Polygraph
 
-Is your smartwatch lying to you? Trust Check reads an Apple Health export and lists the places where your own sleep, steps and heart-rate data contradict each other, then rolls them into a 0–100 data trust score.
+Is your smartwatch lying to you? Polygraph reads an Apple Health export and lists the places where your own sleep, steps and heart-rate data contradict each other, then rolls them into a 0–100 data trust score.
 
 Everything runs in the browser. The export is parsed as a stream in the tab and is never uploaded.
 
