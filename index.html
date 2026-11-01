@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trust Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f7f4ed;--card:#fffdf9;--ink:#17171a;--muted:#6b675f;--line:#e3ddd0;
+  --orange:#ff7a00;--yellow:#ffd60a;
+  --h0:#ece6da;--h1:#e8430c;--h2:#ff7a00;--h3:#ffb400;--h4:#ffe27a;
+  --serif:"Instrument Serif","Iowan Old Style",Palatino,Georgia,serif;
+  --sans:"Inter Tight",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --r:16px
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+::selection{background:var(--yellow);color:var(--ink)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+em{font-style:italic}
+
+nav{position:sticky;top:0;z-index:5;background:rgba(247,244,237,.88);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line)}
+nav>div{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center}
+nav a{color:inherit;text-decoration:none}
+.brand{display:flex;align-items:center;gap:10px;font:400 23px/1 var(--serif)}
+.mark{width:22px;height:22px;border-radius:6px;background:var(--orange);display:grid;place-items:center;flex:none}
+.mark svg{width:13px;height:13px;color:var(--ink)}
+nav .r{margin-left:auto;display:flex;gap:26px;font-weight:500;font-size:14px;color:var(--muted)}
+nav .r a:hover{color:var(--ink)}
+@media (max-width:620px){nav .r{display:none}}
+main{max-width:1080px;margin:0 auto;padding:0 24px;position:relative}
+.heroband{position:absolute;z-index:-1;top:-70px;left:50%;width:100vw;transform:translateX(-50%);height:940px;pointer-events:none;
+  background:
+   radial-gradient(52% 46% at 88% 2%,rgba(255,122,0,.30),transparent 72%),
+   radial-gradient(44% 40% at 6% 20%,rgba(255,214,10,.34),transparent 72%),
+   radial-gradient(40% 30% at 50% 62%,rgba(255,255,255,.75),transparent 75%),
+   linear-gradient(180deg,#ffeed6 0%,#fff6e6 38%,rgba(247,244,237,0) 100%)}
+
+.hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center;padding:80px 0 0}
+.hero-side{display:flex;flex-direction:column;gap:14px}
+.peek{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:rgba(255,253,249,.7);color:var(--ink);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;font-weight:400;cursor:pointer;transition:border-color .15s,background .15s}
+.peek:hover{border-color:var(--orange);background:var(--card)}
+.peek svg.ringm{width:52px;height:52px;flex:none}
+.peek b{display:block;font-size:14.5px;font-weight:600}
+.peek i{display:block;font-style:normal;font-size:13px;color:var(--muted)}
+.peek .go{margin-left:auto;width:18px;height:18px;color:var(--orange);flex:none}
+.hero-t{padding:0}
+.hero-t .k{margin-bottom:24px}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:44px;padding-top:56px}}
+h1{font:400 clamp(48px,6.2vw,88px)/.95 var(--serif);letter-spacing:-.025em;margin:0 0 28px}
+h1 em{color:var(--orange)}
+.lede{font-size:clamp(17px,2vw,20px);line-height:1.45;color:var(--muted);max-width:30em;margin:0}
+
+.drop{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:32px;box-shadow:0 24px 60px -24px rgba(255,122,0,.28);transition:border-color .2s,box-shadow .2s}
+.drop.over{border-color:var(--orange);box-shadow:0 0 0 4px rgba(255,122,0,.18)}
+.drop h3{margin:0 0 8px;font:400 30px/1.1 var(--serif);letter-spacing:-.01em}
+.drop>p{margin:0 0 24px;color:var(--muted);font-size:15px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn,button{font:600 15px/1 var(--sans);border:0;border-radius:10px;padding:14px 22px;cursor:pointer;background:var(--ink);color:#fff;transition:transform .12s,background .15s}
+.btn.primary,button.primary{background:var(--orange);color:var(--ink)}
+.btn.primary:hover,button.primary:hover{background:#ff8d1f}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.ghost:hover{background:#f0ebe0}
+.btn:active,button:active{transform:scale(.97)}
+.btn:focus-visible,button:focus-visible,#file:focus-visible+label,a:focus-visible,summary:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.priv{font-size:13.5px;color:var(--muted);margin:16px 0 0}
+.dropmeta{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.dropmeta .priv{margin:0}
+.dropmeta details{margin-top:12px}
+details{font-size:14.5px;color:var(--muted)}
+summary{cursor:pointer;display:inline-block}
+summary:hover{color:var(--ink)}
+details ol{margin:10px 0 0;padding-left:20px}
+#prog{display:none;margin-top:24px}
+.bar{height:5px;background:var(--h0);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--orange);border-radius:99px;transition:width .1s}
+#err{color:var(--h1);margin-top:14px;display:none;font-size:15px}
+
+/* section heads */
+.sec{margin:104px 0 0}
+.k{display:flex;gap:10px;align-items:baseline;font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.k .n{color:var(--orange)}
+.sechead{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:end;margin:0 0 40px}
+.sechead h2{font:400 clamp(36px,5vw,58px)/1 var(--serif);letter-spacing:-.02em;margin:0;max-width:18ch}
+.sechead h2 em{color:var(--orange)}
+.sechead p{margin:0;color:var(--muted);font-size:16px;line-height:1.5;max-width:30em;padding-bottom:6px;justify-self:end;border-left:1px solid var(--line);padding-left:24px}
+@media (max-width:760px){.sechead{grid-template-columns:1fr;gap:16px}.sechead p{justify-self:start;border-left:0;padding-left:0}}
+
+/* bento: ruled editorial grid */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tile{background:var(--card);padding:28px;display:flex;flex-direction:column;min-height:270px;min-width:0}
+.fig{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:22px}
+.fig b{color:var(--muted);font-weight:500}
+.tile h3{font:400 clamp(24px,2.6vw,30px)/1.08 var(--serif);letter-spacing:-.015em;margin:0 0 10px}
+.tile h3 em{color:var(--orange)}
+.tile p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.5;max-width:34em}
+.cap{font-size:12px;color:var(--muted);margin-top:14px;letter-spacing:.01em}
+.t-a{grid-column:span 6;display:grid;grid-template-columns:5fr 7fr;gap:0 56px;padding:32px 32px 28px}
+.t-a .txt{display:flex;flex-direction:column}
+.t-a h3{font-size:clamp(30px,3.6vw,42px);line-height:1.02}
+.facts{display:flex;gap:6px 22px;flex-wrap:wrap;margin-top:auto;padding-top:22px;font-size:13px;color:var(--muted)}
+.facts b{font-weight:600;color:var(--ink)}
+.t-a .fg{display:flex;flex-direction:column;justify-content:center}
+.t-b,.t-c,.t-d{grid-column:span 2}
+.t-e{grid-column:span 6;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:32px;min-height:0;padding:26px 32px}
+.t-e .fig{margin-bottom:10px;justify-content:flex-start;gap:14px}
+.t-e h3{margin-bottom:6px}
+.t-e svg{width:150px;flex:none;height:auto}
+.push{margin-top:auto}
+@media (max-width:900px){.t-a{grid-template-columns:1fr;gap:28px}.t-b,.t-c{grid-column:span 3}.t-d{grid-column:span 6}}
+@media (max-width:600px){.t-b,.t-c,.t-d{grid-column:span 6}.tile,.t-a{padding:24px}.tile{min-height:0}.t-e{flex-direction:column;align-items:flex-start;gap:20px;padding:24px}}
+
+svg text{font:500 10.5px var(--sans)}
+.f-m{fill:var(--muted)}.f-i{fill:var(--ink)}.f-o{fill:var(--orange)}
+.gl{stroke:var(--line);stroke-width:1}
+
+.bars .bl{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);margin:0 0 7px}
+.bars .bl b{font:400 26px/1 var(--serif);color:var(--ink);letter-spacing:-.01em}
+.bars .tr{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--h0);margin-bottom:20px;gap:2px}
+.bars .tr i{display:block;height:100%}
+.bars .g{background:#8f8a7f}.bars .o{background:var(--orange)}
+.bars .dup{font-size:12.5px;color:var(--orange);font-weight:600;margin:-6px 0 0}
+
+/* method + limits */
+.meth{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
+.meth>div{padding:20px 20px 4px 0}
+.meth>div+div{padding-left:20px;border-left:1px solid var(--line)}
+.meth b{display:block;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.meth .w{font:400 64px/1 var(--serif);letter-spacing:-.03em;margin:10px 0 12px}
+.meth p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
+.fine{font-size:14px;color:var(--muted);margin:30px 0 0;max-width:60ch;font-style:italic}
+@media (max-width:760px){.meth{grid-template-columns:repeat(2,1fr)}.meth>div:nth-child(3){padding-left:0;border-left:0}.meth>div:nth-child(n+3){border-top:1px solid var(--line);margin-top:20px}.meth .w{font-size:52px}}
+.limits{display:grid;grid-template-columns:repeat(3,1fr);gap:0 36px;border-top:1px solid var(--ink)}
+.limits>div{padding-top:18px}
+.limits b{display:block;font:400 25px/1.1 var(--serif);margin-bottom:8px;letter-spacing:-.01em}
+.limits p{margin:0;font-size:14.5px;color:var(--muted)}
+@media (max-width:760px){.limits{grid-template-columns:1fr;gap:26px}}
+
+/* footer */
+footer{margin-top:128px;border-top:1px solid var(--line)}
+.foot{max-width:1080px;margin:0 auto;padding:26px 24px 38px;display:flex;align-items:center;gap:12px 30px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.foot .brand{font-size:21px;color:var(--ink)}
+.foot a{color:var(--ink);text-decoration:none}
+.foot a:hover{color:var(--orange)}
+.foot .cr a{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.foot .tg{margin:0;flex:1;min-width:230px}
+.foot .r{display:flex;gap:18px;align-items:center}
+.foot .ic{display:flex;gap:14px;align-items:center}
+.foot .ic a{display:grid;place-items:center;width:20px;height:20px;color:var(--ink)}
+.foot .ic svg{width:18px;height:18px;fill:currentColor}
+
+/* results */
+#out{display:none}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+.hero{display:flex;gap:52px;align-items:center;flex-wrap:wrap;padding:48px;margin-top:44px}
+.ring{position:relative;width:230px;height:230px;flex:none}
+.ring svg{transform:rotate(-90deg);width:100%;height:100%}
+.ring .n{position:absolute;inset:0;display:grid;place-items:center;font:400 96px/1 var(--serif);letter-spacing:-.03em}
+.ring .n small{display:block;font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:4px;text-align:center}
+.verdict{flex:1;min-width:250px;max-width:460px}
+.verdict .g{font:400 clamp(38px,5.4vw,58px)/1 var(--serif);letter-spacing:-.02em;margin:0}
+.verdict p{margin:12px 0 0;color:var(--muted)}
+.verdict .s{font-size:13.5px}
+h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margin:72px 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{padding:24px}
+.card .kk{font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center;margin-bottom:12px}
+.card .kk svg{width:17px;height:17px;color:var(--orange)}
+.card .v{font:400 64px/1 var(--serif);letter-spacing:-.03em;margin:0 0 14px}
+.card .m{height:4px;background:var(--h0);border-radius:9px;overflow:hidden}
+.card .m i{display:block;height:100%;background:var(--orange);border-radius:9px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.card p{font-size:14px;color:var(--muted);margin:14px 0 0;line-height:1.5}
+.rc{display:flex;gap:16px;padding:20px 22px;margin-bottom:10px;align-items:flex-start}
+.rc>svg{width:21px;height:21px;flex:none;color:var(--orange);margin-top:4px}
+.rc b{display:block;font:400 23px/1.15 var(--serif);letter-spacing:-.01em;margin-bottom:6px}
+.rc span.d{font-size:14.5px;color:var(--muted);line-height:1.5;display:block}
+.tag{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--orange);display:block;margin-bottom:4px}
+.heatwrap{padding:24px}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,16px);gap:4px;overflow-x:auto;padding-bottom:6px}
+.heat i{width:16px;height:16px;border-radius:4px;background:var(--h0)}
+.legend{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.note{font-size:13.5px;color:var(--muted);margin-top:48px;padding:20px 24px;line-height:1.5;background:transparent;border-style:dashed}
+.sr{position:absolute;left:-9999px}
+.in{animation:up .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.in{animation:none}.btn,button,.card .m i{transition:none}html{scroll-behavior:auto}}
+@media (max-width:560px){.hero-t{padding-top:52px}.ring{width:190px;height:190px}.ring .n{font-size:78px}.hero{padding:30px 24px;gap:26px}.drop{padding:24px 22px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 4 12 2.5-6H21" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-steps" viewBox="0 0 24 24"><ellipse cx="8" cy="8" rx="3" ry="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 15.500h4.500v3a2.250 2.250 0 0 1-4.500 0v-3ZM16.500 10c1.500 0 2.500 1.400 2.500 3.200s-1 2.800-2.500 2.800S14 15 14 13.200 15 10 16.500 10ZM14.800 18.500H18v1.500a1.600 1.600 0 0 1-3.200 0v-1.500Z" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.500S3.500 15.300 3.500 9.200A4.700 4.700 0 0 1 12 6.800a4.700 4.700 0 0 1 8.500 2.400C20.500 15.300 12 20.500 12 20.500Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-gap" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.500V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4 2.800 19.500h18.400L12 4ZM12 10v4.500M12 17.200v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+  <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></symbol>
+</defs></svg>
+
+<nav><div>
+  <a class="brand" href="#top" data-go="top"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Trust Check</a>
+  <span class="r"><a href="#method" data-go="method">How it works</a><a href="#limits" data-go="limits">Limits</a><a href="#privacy" data-go="privacy">Privacy</a></span>
+</div></nav>
+
+<main id="top">
+  <div id="landing">
+    <div class="heroband" aria-hidden="true"></div>
+    <div class="hero-grid">
+    <header class="hero-t in">
+      <p class="k"><span class="n">●</span> A data-quality check for Apple Health</p>
+      <h1>Is your smartwatch <em>lying</em> to you?</h1>
+      <p class="lede">Upload your Apple Health export. This page compares your sleep, steps and heart rate against each other and lists every place they disagree.</p>
+    </header>
+
+    <div class="hero-side">
+    <section class="drop in" id="drop" style="animation-delay:.08s">
+      <h3>Drop your export here</h3>
+      <p>export.zip or export.xml, straight from the Health app.</p>
+      <div class="row">
+        <input type="file" id="file" accept=".zip,.xml" class="sr">
+        <label for="file" class="btn primary" tabindex="0" id="pick">Choose file</label>
+        <button class="ghost" id="demo">Use sample data</button>
+      </div>
+      <div class="dropmeta">
+        <p class="priv">The file is read in this tab and never uploaded.</p>
+      <details><summary>Where do I find the export?</summary>
+        <ol><li>Open the Health app and tap your profile picture.</li><li>Tap <b>Export All Health Data</b>, then <b>Export</b>.</li><li>Wait for it to finish, then AirDrop or save <b>export.zip</b> to this computer.</li></ol>
+      </details>
+      </div>
+      <div id="prog"><div class="bar"><i id="pbar"></i></div><p class="priv" id="ptxt">Reading…</p></div>
+      <div id="err" role="alert"></div>
+    </section>
+      <button type="button" class="peek" id="peek" aria-label="See a sample result">
+        <svg class="ringm" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" fill="none" stroke="var(--h0)" stroke-width="5"/><circle cx="26" cy="26" r="22" fill="none" stroke="var(--orange)" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="18" transform="rotate(-90 26 26)"/><text x="26" y="31" text-anchor="middle" style="font:400 17px var(--serif)" fill="var(--ink)">87</text></svg>
+        <span><b>See a sample result</b><i>Mostly honest · 3 of 58 nights contradicted</i></span>
+        <svg class="go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+      </button>
+    </div>
+    </div>
+
+    <section class="sec">
+      <p class="k"><span class="n">01</span> What it looks for</p>
+      <div class="sechead">
+        <h2>Places where your watch <em>contradicts</em> itself</h2>
+        <p>Four checks run on every export. Each one compares signals that should agree with each other.</p>
+      </div>
+      <div class="bento">
+
+        <article class="tile t-a">
+          <div class="txt">
+            <div class="fig"><span>Sleep</span><b>Fig. 1</b></div>
+            <h3>“Asleep” for nine hours. <em>Pulse says otherwise.</em></h3>
+            <p>A still wrist gets logged as sleep. If your heart rate sits far above its overnight norm for two hours inside that window, one of the readings is wrong.</p>
+            <p class="facts"><span><b>9h 05m</b> logged</span><span><b>22</b> readings over 90 bpm</span><span><b>25 min</b> walking</span></p>
+          </div>
+          <div class="fg">
+            <svg viewBox="0 0 560 160" role="img" aria-label="Heart rate over one night. A two-hour spike to 128 beats per minute sits inside a sleep bar logged from 23:00 to 08:30." style="width:100%;height:auto">
+              <rect x="119" y="6" width="105" height="132" fill="var(--orange)" opacity=".07"/>
+              <line x1="40" x2="540" y1="60" y2="60" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".55"/>
+              <text x="540" y="52" text-anchor="end" class="f-m">90 bpm sleeping ceiling</text>
+              <polyline points="40,96 70,94 100,97 119,96 224,96 250,97 300,95 350,97 400,96 450,95 500,97 540,96" fill="none" stroke="var(--ink)" stroke-width="1.5" opacity=".5" stroke-linejoin="round"/>
+              <polyline points="119,96 128,66 140,44 152,30 165,56 178,22 192,42 205,32 218,54 224,82 232,97" fill="none" stroke="var(--orange)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="178" cy="22" r="3.5" fill="var(--orange)"/>
+              <text x="236" y="26" class="f-o" style="font-weight:600;font-size:12px">Peak 128 bpm</text>
+              <rect x="40" y="112" width="500" height="14" rx="7" fill="var(--yellow)"/>
+              <text x="48" y="122.500" class="f-i" style="font-weight:600;font-size:10px">Logged as asleep</text>
+              <text x="40" y="150" class="f-m">23:00</text><text x="540" y="150" text-anchor="end" class="f-m">08:30</text>
+            </svg>
+            <p class="cap">Night ending Sun 13 Sep, from the sample data.</p>
+          </div>
+        </article>
+
+        <article class="tile t-b">
+          <div class="fig"><span>Steps</span><b>Fig. 2</b></div>
+          <h3>The same walk, <em>counted twice</em></h3>
+          <p>Phone and watch both log steps. Apple’s Health app merges them. The raw export doesn’t.</p>
+          <div class="bars push" style="padding-top:26px">
+            <div class="bl"><span>In the export</span><b>8,379</b></div>
+            <div class="tr"><i class="g" style="width:58.8%"></i><i class="o" style="width:41.2%"></i></div>
+            <div class="bl"><span>What you walked</span><b>4,929</b></div>
+            <div class="tr"><i class="g" style="width:58.8%"></i></div>
+            <p class="dup">3,450 steps counted twice</p>
+          </div>
+        </article>
+
+        <article class="tile t-c">
+          <div class="fig"><span>Heart rate</span><b>Fig. 3</b></div>
+          <h3>One reading of <em>184</em></h3>
+          <p>71, then 184, then 73, inside four minutes. That’s a loose strap, not a sprint.</p>
+          <svg class="push" viewBox="0 0 240 96" role="img" aria-label="Heart rate line with one isolated spike to 184" style="width:100%;height:auto;padding-top:26px">
+            <line class="gl" x1="0" x2="240" y1="72" y2="72"/>
+            <polyline points="0,70 30,66 60,72 90,68 110,10 130,66 160,70 190,67 240,71" fill="none" stroke="var(--ink)" stroke-width="1.6" opacity=".55" stroke-linejoin="round"/>
+            <polyline points="90,68 110,10 130,66" fill="none" stroke="var(--orange)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="110" cy="10" r="4" fill="var(--orange)"/><text x="122" y="14" class="f-o" style="font-weight:600;font-size:12px">184 bpm</text>
+          </svg>
+        </article>
+
+        <article class="tile t-d">
+          <div class="fig"><span>Coverage</span><b>Fig. 4</b></div>
+          <h3>The hour your watch <em>goes missing</em></h3>
+          <p>Charge it at 7 every morning and that hour never reaches your record.</p>
+          <svg class="push" viewBox="0 0 240 78" role="img" aria-label="Five days of 24 hourly cells with the 07:00 column mostly empty" style="width:100%;height:auto;padding-top:26px">
+            <g id="gapgrid"></g>
+            <text x="0" y="76" class="f-m">00</text><text x="104" y="76" class="f-m">12</text><text x="214" y="76" class="f-m">23</text>
+          </svg>
+        </article>
+
+        <article class="tile t-e" id="privacy">
+          <div>
+            <div class="fig"><span>Privacy</span><b>Fig. 5</b></div>
+            <h3>Nothing leaves <em>this tab</em></h3>
+            <p>Your browser reads the file. No upload, no account, no server on the other end.</p>
+          </div>
+          <svg viewBox="0 0 150 96" role="img" aria-label="A browser window with a lock inside" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="146" height="88" rx="12"/>
+            <path d="M2 24h146"/>
+            <circle cx="16" cy="14" r="2.200" fill="var(--muted)" stroke="none" opacity=".4"/><circle cx="25" cy="14" r="2.200" fill="var(--muted)" stroke="none" opacity=".4"/><circle cx="34" cy="14" r="2.200" fill="var(--muted)" stroke="none" opacity=".4"/>
+            <rect x="62" y="48" width="26" height="22" rx="6" fill="var(--orange)" stroke="none"/>
+            <path d="M68 48v-6a7 7 0 0 1 14 0v6" stroke="var(--orange)" stroke-width="2"/>
+          </svg>
+        </article>
+      </div>
+    </section>
+
+    <section class="sec" id="method">
+      <p class="k"><span class="n">02</span> How it works</p>
+      <div class="sechead">
+        <h2>One number, <em>four parts</em></h2>
+        <p>Each check becomes a score out of 100. The four are weighted into the one number you see.</p>
+      </div>
+      <div class="meth">
+        <div><b>Sleep</b><div class="w">30%</div><p>Each night is checked against the heart rate and steps inside it, for duplicate sources, for sleeps over 12 hours and for missing pulse.</p></div>
+        <div><b>Steps</b><div class="w">25%</div><p>The raw step total against the same minutes counted once. The more the export overstates, the lower the score.</p></div>
+        <div><b>Coverage</b><div class="w">25%</div><p>How much of each day has watch data, measured against an 18-hour day.</p></div>
+        <div><b>Heart rate</b><div class="w">20%</div><p>Readings outside 30–230 bpm, and single-reading spikes that happen outside a workout.</p></div>
+      </div>
+      <p class="fine">Weights and thresholds are hand-picked. They haven’t been validated against a clinical reference.</p>
+    </section>
+
+    <section class="sec" id="limits">
+      <p class="k"><span class="n">03</span> Limits</p>
+      <div class="sechead">
+        <h2>What this <em>can’t</em> tell you</h2>
+        <p>A short list of what this check can’t see, so the score doesn’t get over-read.</p>
+      </div>
+      <div class="limits">
+        <div><b>Contradictions, not errors</b><p>Two signals disagreeing means something is off. It doesn’t say which one, or whether the sensor is accurate.</p></div>
+        <div><b>Apple Health only, for now</b><p>Fitbit and Garmin exports are laid out differently, and Garmin’s doesn’t include minute-level data.</p></div>
+        <div><b>Not a medical device</b><p>It checks data quality. It doesn’t diagnose, monitor or advise on anything.</p></div>
+      </div>
+    </section>
+  </div>
+
+  <section id="out">
+    <div class="panel hero in">
+      <div class="ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="none" stroke="var(--h0)" stroke-width="9"/><circle id="arc" cx="100" cy="100" r="90" fill="none" stroke="var(--orange)" stroke-width="9" stroke-linecap="round" stroke-dasharray="565.5" stroke-dashoffset="565.5"/></svg><div class="n"><div><span id="score">0</span><small>Trust score</small></div></div></div>
+      <div class="verdict"><p class="g" id="grade"></p><p id="sum"></p><p class="s" id="span"></p>
+        <div class="row" style="margin-top:22px"><button class="primary" id="share">Download share card</button><button class="ghost" id="again">Check another</button></div></div>
+    </div>
+
+    <h2 class="rh">Score breakdown</h2>
+    <div class="grid" id="cards"></div>
+
+    <h2 class="rh">What it found</h2>
+    <div id="receipts"></div>
+
+    <h2 class="rh">Every day</h2>
+    <div class="panel heatwrap">
+      <div class="heat" id="heat" aria-label="Daily trust score calendar"></div>
+      <div class="legend"><i style="background:var(--h4)"></i>clean <i style="background:var(--h3)"></i><i style="background:var(--h2)"></i><i style="background:var(--h1)"></i>contradictory <i style="background:var(--h0);margin-left:8px"></i>no data</div>
+    </div>
+
+    <p class="panel note"><b>Read this as a data-quality check.</b> A flag means two of your signals disagree, not that your watch is wrong. It isn’t a medical device, and the thresholds are heuristics.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="foot">
+    <span class="brand"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Trust Check</span>
+    <span class="cr" id="credit"></span>
+    <p class="tg">Free, no account. Your health data never leaves your browser.</p>
+    <span class="r"><a href="#method" data-go="method">How scoring works</a><span class="ic" id="social"></span></span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<script src="analyzer.js"></script>
+<script src="sample.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const icon = (id) => `<svg><use href="#i-${id}"/></svg>`;
+const KIND_ICON = { sleep: 'moon', steps: 'steps', hr: 'heart', coverage: 'gap' };
+let REPORT = null;
+
+/* footer credit and profile links */
+const SITE = {
+  author: 'Fariha Batool', authorUrl: 'https://www.linkedin.com/in/fariha-batool/',
+  github: 'https://github.com/batool-fariha', linkedin: 'https://www.linkedin.com/in/fariha-batool/'
+};
+(function () {
+  if (SITE.author) $('#credit').innerHTML = 'Designed and built by ' + (SITE.authorUrl ? `<a href="${esc(SITE.authorUrl)}" rel="noopener">${esc(SITE.author)}</a>` : esc(SITE.author));
+  $('#social').innerHTML = [['GitHub', 'github', SITE.github], ['LinkedIn', 'linkedin', SITE.linkedin]]
+    .filter(([, , u]) => u).map(([n, i, u]) => `<a href="${esc(u)}" rel="noopener" title="${n}" aria-label="${n}"><svg><use href="#i-${i}"/></svg></a>`).join('');
+})();
+
+/* gap illustration: 5 days x 24 hours, the 07:00 column mostly empty */
+(function () {
+  let h = '';
+  for (let d = 0; d < 5; d++) for (let c = 0; c < 24; c++) {
+    const empty = c === 7 && d !== 2;
+    h += `<rect x="${c * 10}" y="${d * 11}" width="8" height="9" rx="2" fill="${empty ? 'var(--h0)' : 'var(--yellow)'}"/>`;
+  }
+  $('#gapgrid').innerHTML = h;
+})();
+
+function showLanding() { $('#out').style.display = 'none'; $('#landing').style.display = ''; $('#prog').style.display = 'none'; $('#file').value = ''; }
+document.querySelectorAll('[data-go]').forEach((a) => a.addEventListener('click', (ev) => {
+  ev.preventDefault(); const id = a.dataset.go;
+  if ($('#landing').style.display === 'none') showLanding();
+  requestAnimationFrame(() => (id === 'top' ? window.scrollTo({ top: 0 }) : document.getElementById(id).scrollIntoView()));
+}));
+
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', (ev) => { const f = ev.dataTransfer.files[0]; if (f) run(f); });
+$('#file').addEventListener('change', (ev) => { const f = ev.target.files[0]; if (f) run(f); });
+$('#pick').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('#file').click(); } });
+$('#demo').addEventListener('click', () => run(new File([WearableSample.generate({ days: 60, seed: 7 }).xml], 'sample-export.xml')));
+$('#peek').addEventListener('click', () => $('#demo').click());
+$('#again').addEventListener('click', () => { showLanding(); window.scrollTo(0, 0); });
+$('#share').addEventListener('click', shareCard);
+
+function fail(msg) { $('#prog').style.display = 'none'; const e = $('#err'); e.textContent = msg; e.style.display = 'block'; }
+
+async function run(file) {
+  $('#err').style.display = 'none'; $('#prog').style.display = 'block';
+  const an = WearableTrust.createAnalyzer(), parser = WearableTrust.createParser(an);
+  const dec = new TextDecoder('utf-8');
+  const reader = file.stream().getReader();
+  const isZip = /\.zip$/i.test(file.name);
+  let read = 0, last = 0;
+  const tick = async () => {
+    const now = performance.now();
+    if (now - last > 80) {
+      last = now;
+      $('#pbar').style.width = Math.min(99, (read / file.size) * 100) + '%';
+      $('#ptxt').textContent = `Reading ${(read / 1048576).toFixed(0)} of ${(file.size / 1048576).toFixed(0)} MB · ${an.counts.hr.toLocaleString()} heart-rate readings so far`;
+      await new Promise((r) => setTimeout(r));
+    }
+  };
+  try {
+    if (isZip) {
+      if (!window.fflate) return fail('Could not load the unzip helper (needs internet once). Unzip the file yourself and drop export.xml instead.');
+      let found = false;
+      const unzip = new fflate.Unzip();
+      unzip.register(fflate.UnzipInflate); unzip.register(fflate.UnzipPassThrough);
+      unzip.onfile = (f) => {
+        if (/(^|\/)export\.xml$/.test(f.name)) {
+          found = true;
+          f.ondata = (err, chunk, fin) => { if (err) throw err; parser.feed(dec.decode(chunk, { stream: !fin })); };
+          f.start();
+        }
+      };
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) { unzip.push(new Uint8Array(0), true); break; }
+        read += value.length; unzip.push(value, false); await tick();
+      }
+      if (!found) return fail('No export.xml found inside that zip. Is it the Apple Health export?');
+    } else {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        read += value.length; parser.feed(dec.decode(value, { stream: true })); await tick();
+      }
+    }
+    $('#ptxt').textContent = 'Cross-checking your signals…';
+    await new Promise((r) => setTimeout(r, 30));
+    const rep = an.finish();
+    if (rep.empty || (!rep.counts.hr && !rep.counts.steps && !rep.counts.sleep)) return fail('No steps, heart-rate or sleep records found. Is this an Apple Health export.xml?');
+    render(rep);
+  } catch (e) { fail('Could not read that file: ' + e.message); }
+}
+
+const bucket = (s) => s === null ? 'var(--h0)' : s >= 92 ? 'var(--h4)' : s >= 80 ? 'var(--h3)' : s >= 65 ? 'var(--h2)' : 'var(--h1)';
+
+function render(rep) {
+  REPORT = rep;
+  $('#landing').style.display = 'none'; $('#prog').style.display = 'none'; $('#out').style.display = 'block';
+  const sc = Math.round(rep.scores.overall);
+  const target = $('#score'); let cur = 0;
+  const step = () => { cur = Math.min(sc, cur + Math.max(1, Math.round(sc / 40))); target.textContent = cur; if (cur < sc) requestAnimationFrame(step); };
+  step();
+  const arc = $('#arc');
+  arc.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)'; requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', 565.5 * (1 - sc / 100)));
+  $('#grade').textContent = rep.grade;
+  const f = rep.facts;
+  $('#sum').textContent = f.nights ? `${f.flaggedNights} of ${f.nights} nights of sleep are contradicted by your own data.` : 'Not enough sleep data to check nights.';
+  $('#span').textContent = `${rep.span.from} to ${rep.span.to} · ${rep.span.days} days · ${(rep.counts.hr + rep.counts.steps + rep.counts.sleep).toLocaleString()} records checked`;
+
+  const cards = [
+    ['Sleep', 'moon', rep.scores.sleep, f.nights ? `${f.flaggedNights} of ${f.nights} nights conflict with heart rate, movement or a second source. Your usual sleeping pulse: ${Math.round(f.medianSleepHr)} bpm.` : 'No sleep records.'],
+    ['Steps', 'steps', rep.scores.steps, f.rawSteps ? `The raw export totals ${f.rawSteps.toLocaleString()} steps; real movement was about ${f.dedupSteps.toLocaleString()} (${Math.round(f.inflation * 100)}% inflated by phone + watch overlap).` : 'No step records.'],
+    ['Heart rate', 'heart', rep.scores.hr, f.hrSamples >= 100 ? `${f.hrImpossible} impossible readings and ${f.hrBlips} single-reading spikes across ${f.hrSamples.toLocaleString()} samples.` : 'Not enough heart-rate data.'],
+    ['Coverage', 'gap', rep.scores.coverage, f.coverageDays ? `Watch data present ${f.avgHoursWithData.toFixed(1)} h/day on average.${f.recurringGap ? ` It goes dark around ${String(f.recurringGap.hour).padStart(2, '0')}:00 on ${f.recurringGap.days} days.` : ''}${f.darkDays ? ` ${f.darkDays} day(s) with nothing.` : ''}` : 'No coverage data.']
+  ];
+  $('#cards').innerHTML = cards.map(([k, ic, s, t], i) => {
+    const has = s !== null;
+    return `<div class="panel card in" style="animation-delay:${i * 60}ms"><div class="kk">${icon(ic)}${k}</div><div class="v">${has ? Math.round(s) : 'n/a'}</div><div class="m"><i style="width:0" data-w="${has ? s : 0}"></i></div><p>${esc(t)}</p></div>`;
+  }).join('');
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.card .m i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
+
+  $('#receipts').innerHTML = rep.receipts.length
+    ? rep.receipts.map((r, i) => `<div class="panel rc in" style="animation-delay:${i * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span></div></div>`).join('')
+    : '<p>Nothing contradictory found. Your watch is behaving.</p>';
+
+  const d = rep.daily, first = new Date(d[0].day * 86400000).getUTCDay();
+  const pad = (first + 6) % 7;
+  $('#heat').innerHTML = '<i style="visibility:hidden"></i>'.repeat(pad) + d.map((x) =>
+    `<i style="background:${bucket(x.score)}" title="${esc(WearableTrust.fmtDay(x.day))}: ${x.score === null ? 'no data' : x.score}"></i>`).join('');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function wrap(ctx, text, x, y, maxW, lh, maxLines) {
+  const words = text.split(' '); let line = '', n = 0;
+  for (const w of words) {
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && line) { if (++n >= maxLines) { ctx.fillText(line + '…', x, y); return; } ctx.fillText(line, x, y); y += lh; line = w; } else line = t;
+  }
+  ctx.fillText(line, x, y);
+}
+function shareCard() {
+  const r = REPORT, c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+  const g = c.getContext('2d'), sc = Math.round(r.scores.overall);
+  g.fillStyle = '#ff7a00'; g.fillRect(0, 0, 1080, 1350);
+  g.fillStyle = '#f7f4ed'; g.beginPath(); g.roundRect(60, 60, 960, 1230, 40); g.fill();
+  const ink = '#17171a', mute = '#6b675f', S = '"Instrument Serif", "Iowan Old Style", Georgia, serif', F = '"Inter Tight", -apple-system, Helvetica, Arial, sans-serif';
+  g.fillStyle = mute; g.font = `600 26px ${F}`; g.fillText('MY SMARTWATCH TRUST SCORE', 120, 150);
+  g.fillStyle = ink; g.font = `400 360px ${S}`; g.fillText(String(sc), 108, 470);
+  g.fillStyle = '#ff7a00'; g.font = `italic 400 100px ${S}`; g.fillText(r.grade, 120, 600);
+  [['Sleep', r.scores.sleep], ['Steps', r.scores.steps], ['Heart rate', r.scores.hr], ['Coverage', r.scores.coverage]].forEach(([k, v], i) => {
+    const y = 710 + i * 68;
+    g.fillStyle = mute; g.font = `500 28px ${F}`; g.fillText(k, 120, y);
+    g.fillStyle = '#ece6da'; g.beginPath(); g.roundRect(360, y - 22, 500, 8, 4); g.fill();
+    if (v !== null) { g.fillStyle = '#ff7a00'; g.beginPath(); g.roundRect(360, y - 22, Math.max(8, 500 * v / 100), 8, 4); g.fill(); }
+    g.fillStyle = ink; g.font = `600 28px ${F}`; g.fillText(v === null ? 'n/a' : String(Math.round(v)), 890, y);
+  });
+  if (r.receipts[0]) { g.fillStyle = ink; g.font = `400 52px ${S}`; wrap(g, '“' + r.receipts[0].title + '”', 120, 1050, 840, 62, 3); }
+  g.fillStyle = mute; g.font = `500 24px ${F}`; g.fillText('Checked in my browser · nothing uploaded', 120, 1230);
+  c.toBlob((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'trust-score.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+}
+</script>
+</body>
+</html>
