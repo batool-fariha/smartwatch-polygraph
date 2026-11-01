@@ -749,25 +749,69 @@ function wrap(ctx, text, x, y, maxW, lh, maxLines) {
   }
   ctx.fillText(line, x, y);
 }
-function shareCard() {
-  const r = REPORT, c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+/* share card: 1080x1350, drawn from the user's own report */
+async function buildShareCard() {
+  try { await Promise.all([document.fonts.load('400 100px "Instrument Serif"'), document.fonts.load('italic 400 40px "Instrument Serif"'), document.fonts.load('400 28px "Inter Tight"'), document.fonts.load('600 28px "Inter Tight"')]); } catch (e) {}
+  const r = REPORT, f = r.facts, W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d'), sc = Math.round(r.scores.overall);
-  g.fillStyle = '#ff7a00'; g.fillRect(0, 0, 1080, 1350);
-  g.fillStyle = '#f7f4ed'; g.beginPath(); g.roundRect(60, 60, 960, 1230, 40); g.fill();
-  const ink = '#17171a', mute = '#6b675f', S = '"Instrument Serif", "Iowan Old Style", Georgia, serif', F = '"Inter Tight", -apple-system, Helvetica, Arial, sans-serif';
-  g.fillStyle = mute; g.font = `600 26px ${F}`; g.fillText('MY SMARTWATCH TRUST SCORE', 120, 150);
-  g.fillStyle = ink; g.font = `400 360px ${S}`; g.fillText(String(sc), 108, 470);
-  g.fillStyle = '#ff7a00'; g.font = `italic 400 100px ${S}`; g.fillText(r.grade, 120, 600);
-  [['Sleep', r.scores.sleep], ['Steps', r.scores.steps], ['Heart rate', r.scores.hr], ['Coverage', r.scores.coverage]].forEach(([k, v], i) => {
-    const y = 710 + i * 68;
-    g.fillStyle = mute; g.font = `500 28px ${F}`; g.fillText(k, 120, y);
-    g.fillStyle = '#ece6da'; g.beginPath(); g.roundRect(360, y - 22, 500, 8, 4); g.fill();
-    if (v !== null) { g.fillStyle = '#ff7a00'; g.beginPath(); g.roundRect(360, y - 22, Math.max(8, 500 * v / 100), 8, 4); g.fill(); }
-    g.fillStyle = ink; g.font = `600 28px ${F}`; g.fillText(v === null ? 'n/a' : String(Math.round(v)), 890, y);
+  const INK = '#17171a', MUTED = '#6b675f', OR = '#ff7a00';
+  const SER = '"Instrument Serif", "Iowan Old Style", Georgia, serif', SANS = '"Inter Tight", -apple-system, Helvetica, Arial, sans-serif';
+  const rr = (x, y, w, h, rad, fill) => { g.beginPath(); g.roundRect(x, y, w, h, rad); g.fillStyle = fill; g.fill(); };
+  const glow = (x, y, R, col) => { const gr = g.createRadialGradient(x, y, 0, x, y, R); gr.addColorStop(0, col); gr.addColorStop(1, col.replace(/[\d.]+\)$/, '0)')); g.fillStyle = gr; g.fillRect(0, 0, W, H); };
+  g.fillStyle = '#f7f4ed'; g.fillRect(0, 0, W, H);
+  glow(1020, 60, 760, 'rgba(255,150,40,.45)'); glow(30, 30, 640, 'rgba(255,214,10,.5)'); glow(540, 720, 560, 'rgba(255,255,255,.92)');
+
+  /* brand */
+  const mk = (x, y, z) => { const k = z / 64, X = (v) => x + v * k, Y = (v) => y + v * k; [[21, 1, 22, 16, 4], [21, 47, 22, 16, 4], [56, 25, 4, 9, 2], [5, 11, 52, 42, 14]].forEach(([a, b2, w, h, rad]) => rr(X(a), Y(b2), w * k, h * k, rad * k, OR)); rr(X(10), Y(16), 42 * k, 32 * k, 10 * k, INK); };
+  mk(72, 58, 46);
+  g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillStyle = INK; g.font = `400 40px ${SER}`; g.fillText('Smartwatch Polygraph', 132, 82);
+
+  /* the watch, with this user's ring lengths */
+  const s = 1.3, ox = 540 - 180 * s, oy = 122, X = (v) => ox + v * s, Y = (v) => oy + v * s;
+  const sh = g.createRadialGradient(540, Y(430), 0, 540, Y(430), 190 * s); sh.addColorStop(0, 'rgba(255,122,0,.40)'); sh.addColorStop(1, 'rgba(255,122,0,0)');
+  g.save(); g.translate(0, 0); g.scale(1, .32); g.fillStyle = sh; g.beginPath(); g.arc(540, Y(430) / .32, 190 * s, 0, 7); g.fill(); g.restore();
+  const poly = (pts) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)))); g.closePath(); g.fillStyle = OR; g.fill(); };
+  poly([[128, 112], [138, 6], [146, 0], [214, 0], [222, 6], [232, 112]]); poly([[128, 328], [138, 434], [146, 440], [214, 440], [222, 434], [232, 328]]);
+  [372, 394, 416].forEach((yy) => { g.beginPath(); g.arc(X(180), Y(yy), 4 * s, 0, 7); g.fillStyle = 'rgba(120,50,0,.4)'; g.fill(); });
+  rr(X(292), Y(168), 9 * s, 42 * s, 4.5 * s, '#2b2b30'); rr(X(292), Y(224), 6 * s, 26 * s, 3 * s, '#2b2b30');
+  rr(X(70), Y(95), 220 * s, 250 * s, 58 * s, INK); rr(X(82), Y(107), 196 * s, 226 * s, 47 * s, '#0c0c0e');
+  [[80, '#ffd60a', 'sleep'], [64, '#ff7a00', 'steps'], [48, '#ff5a1f', 'hr'], [32, '#ffb400', 'coverage']].forEach(([rad, col, k]) => {
+    const v = r.scores[k], cx = X(180), cy = Y(220);
+    g.lineWidth = 11 * s; g.lineCap = 'round';
+    g.strokeStyle = 'rgba(255,255,255,.09)'; g.beginPath(); g.arc(cx, cy, rad * s, 0, Math.PI * 2); g.stroke();
+    if (v != null && v > 0) { g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, rad * s, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * v / 100); g.stroke(); }
   });
-  if (r.receipts[0]) { g.fillStyle = ink; g.font = `400 52px ${S}`; wrap(g, '“' + r.receipts[0].title + '”', 120, 1050, 840, 62, 3); }
-  g.fillStyle = mute; g.font = `500 24px ${F}`; g.fillText('Checked in my browser · nothing uploaded', 120, 1230);
-  c.toBlob((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'trust-score.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+  g.textAlign = 'center'; g.fillStyle = '#f7f4ed'; g.font = `400 ${Math.round(44 * s)}px ${SER}`; g.fillText(String(sc), X(180), Y(222));
+
+  /* verdict */
+  g.fillStyle = INK; g.font = `400 112px ${SER}`; g.textBaseline = 'alphabetic'; g.fillText(r.grade, 540, 838);
+  g.fillStyle = MUTED; g.font = `400 31px ${SANS}`;
+  g.fillText(f.nights ? `${f.flaggedNights} of ${f.nights} nights of sleep contradicted by my own data` : 'Checked against my own data', 540, 896);
+
+  /* four sub-scores */
+  const items = [['Sleep', r.scores.sleep, '#ffd60a'], ['Steps', r.scores.steps, '#ff7a00'], ['Heart rate', r.scores.hr, '#ff5a1f'], ['Coverage', r.scores.coverage, '#ffb400']];
+  const meas = items.map(([n, v]) => { g.font = `400 28px ${SANS}`; const a = g.measureText(n + ' ').width; g.font = `600 28px ${SANS}`; const b = g.measureText(v == null ? 'n/a' : String(Math.round(v))).width; return a + b + 26; });
+  let x = 540 - (meas.reduce((p, q) => p + q, 0) + 34 * (items.length - 1)) / 2; g.textAlign = 'left';
+  items.forEach(([n, v, col], i) => {
+    g.beginPath(); g.arc(x + 8, 976, 8, 0, 7); g.fillStyle = col; g.fill();
+    g.font = `400 28px ${SANS}`; g.fillStyle = MUTED; g.fillText(n + ' ', x + 26, 986);
+    const w = g.measureText(n + ' ').width; g.font = `600 28px ${SANS}`; g.fillStyle = INK; g.fillText(v == null ? 'n/a' : String(Math.round(v)), x + 26 + w, 986);
+    x += meas[i] + 34;
+  });
+
+  /* top finding */
+  g.textAlign = 'center'; g.fillStyle = INK; g.font = `italic 400 46px ${SER}`;
+  if (r.receipts[0]) wrap(g, '“' + r.receipts[0].title + '”', 540, 1082, 880, 58, 3);
+  g.fillStyle = MUTED; g.font = `400 25px ${SANS}`; g.fillText('Checked in my browser · nothing uploaded', 540, 1256);
+  g.font = `600 27px ${SANS}`; g.fillStyle = INK; g.fillText('smartwatch-polygraph.vercel.app', 540, 1300);
+  return c;
+}
+async function shareCard() {
+  const btn = $('#share'), label = btn.textContent; btn.textContent = 'Drawing…';
+  try {
+    const c = await buildShareCard();
+    c.toBlob((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'smartwatch-polygraph-score.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+  } finally { btn.textContent = label; }
 }
 </script>
 </body>

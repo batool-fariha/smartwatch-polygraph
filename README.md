@@ -38,6 +38,10 @@ Your own watch is the result: each ring is as long as its sub-score, and the num
 
 ![A calendar coloured by day score, with the selected day broken down underneath](docs/calendar.jpg)
 
+**Share card.** **Download share card** draws a 1080 × 1350 image from your own result: your watch with your ring lengths, the grade, the four sub-scores and your top finding. It is drawn in the page, so nothing leaves your browser.
+
+<img src="docs/share-card.jpg" alt="A share card showing the watch, the grade Mostly honest, four sub-scores and a quoted finding" width="360">
+
 ## How the score works
 
 Four sub-scores, each 0–100, combined as a weighted mean. A sub-score with no data (for example, no sleep records) drops out and the remaining weights are renormalised.
