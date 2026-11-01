@@ -65,16 +65,17 @@
 
   /* ---------- analyzer ---------- */
   function createAnalyzer() {
-    const steps = new Map(); // minute -> [watch, phone, other]
+    const steps = new Map(); // day index -> Float32Array(3 * 1440): watch, phone, other per minute
     const hrRaw = { t: [], v: [], c: [] };
     const sleepRaw = [];
     const workoutRaw = [];
     const counts = { steps: 0, hr: 0, sleep: 0, workouts: 0 };
 
     function addStep(m, c, v) {
-      let a = steps.get(m);
-      if (!a) { a = [0, 0, 0]; steps.set(m, a); }
-      a[c] += v;
+      const di = Math.floor(m / DAY);
+      let a = steps.get(di);
+      if (!a) { a = new Float32Array(3 * DAY); steps.set(di, a); }
+      a[c * DAY + (m - di * DAY)] += v;
     }
 
     function addRecord(a) {
@@ -111,7 +112,7 @@
       /* time range */
       let minAll = Infinity, maxAll = -Infinity;
       if (n) { minAll = ht[0]; maxAll = ht[n - 1]; }
-      for (const m of steps.keys()) { if (m < minAll) minAll = m; if (m > maxAll) maxAll = m; }
+      for (const di of steps.keys()) { if (di * DAY < minAll) minAll = di * DAY; if (di * DAY + DAY - 1 > maxAll) maxAll = di * DAY + DAY - 1; }
       for (const x of sleepRaw) { if (x.s < minAll) minAll = x.s; if (x.e > maxAll) maxAll = x.e; }
       if (!isFinite(minAll)) return { empty: true, counts };
       const firstDay = Math.floor(minAll / DAY), lastDay = Math.floor(maxAll / DAY), nDays = lastDay - firstDay + 1;
@@ -120,7 +121,7 @@
       const wFlag = new Uint8Array(nDays * DAY + 1);
       for (const [s, e] of workoutRaw) for (let m = Math.max(base, Math.floor(s) - 10); m <= Math.min(base + nDays * DAY, e + 10); m++) wFlag[m - base] = 1;
       const inW = (m) => wFlag[m - base] === 1;
-      const stepsAt = (m) => { const a = steps.get(m); return a ? Math.max(a[0], a[1], a[2]) : 0; };
+      const stepsAt = (m) => { const di = Math.floor(m / DAY), a = steps.get(di); if (!a) return 0; const i = m - di * DAY; return Math.max(a[i], a[DAY + i], a[2 * DAY + i]); };
 
       const receipts = [];
       const dayOf = (m) => Math.floor(m / DAY) - firstDay;
@@ -242,10 +243,15 @@
       /* ===== steps: double counting ===== */
       const dayRaw = new Float64Array(nDays), dayDedup = new Float64Array(nDays);
       let rawTot = 0, dedupTot = 0, implaus = 0;
-      for (const [m, a] of steps) {
-        const di = dayOf(m), raw = a[0] + a[1] + a[2], mx = Math.max(a[0], a[1], a[2]);
-        dayRaw[di] += raw; dayDedup[di] += mx; rawTot += raw; dedupTot += mx;
-        if (mx > 250) implaus++;
+      for (const [day, a] of steps) {
+        const di = day - firstDay;
+        for (let i = 0; i < DAY; i++) {
+          const w = a[i], p = a[DAY + i], o = a[2 * DAY + i], raw = w + p + o;
+          if (raw === 0) continue;
+          const mx = Math.max(w, p, o);
+          dayRaw[di] += raw; dayDedup[di] += mx; rawTot += raw; dedupTot += mx;
+          if (mx > 250) implaus++;
+        }
       }
       const infl = dedupTot ? rawTot / dedupTot - 1 : 0;
       const stepsScore = dedupTot ? clamp(100 * (1 - Math.min(1, infl * 1.5)) - Math.min(20, implaus / 10), 0, 100) : null;
@@ -269,7 +275,7 @@
       const useHr = n >= 100;
       const hours = new Uint8Array(nDays * 24);
       if (useHr) for (let i = 0; i < n; i++) hours[Math.floor(ht[i] / 60) - firstDay * 24] = 1;
-      else for (const [m, a] of steps) if (a[0] + a[1] + a[2] > 0) hours[Math.floor(m / 60) - firstDay * 24] = 1;
+      else for (const [day, a] of steps) for (let i = 0; i < DAY; i++) if (a[i] + a[DAY + i] + a[2 * DAY + i] > 0) hours[Math.floor((day * DAY + i) / 60) - firstDay * 24] = 1;
       let fh = hours.indexOf(1), lh = hours.lastIndexOf(1);
       let coverageScore = null, recurring = null, darkRuns = [], hoursLost = 0, coverageDays = 0, avgHours = 0;
       const covByDay = new Map();

@@ -86,7 +86,7 @@ export.zip ─▶ stream unzip ─▶ tag parser ─▶ analyzer ─▶ report
                                             workouts
 ```
 
-The file is read as a stream, decoded in chunks and scanned for `Record` and `Workout` tags, so only the records that matter are kept in memory. It is built to handle large exports, but it has not been benchmarked on multi-gigabyte files yet. `analyzer.js` has no browser dependencies and runs in Node as well, which is how the tests run.
+The file is read as a stream, decoded in chunks and scanned for `Record` and `Workout` tags, so only the records that matter are kept in memory. Steps are held in compact per-day arrays, so memory grows slowly with the size of the export. `analyzer.js` has no browser dependencies and runs in Node as well, which is how the tests run.
 
 ## Run it
 
@@ -107,6 +107,18 @@ To get an export: Health app → your profile picture → **Export All Health Da
 ```bash
 node test.js
 ```
+
+## Performance
+
+Measured on synthetic exports (`tools/make_big_export.py`) in headless Chromium on a laptop, so treat the numbers as indicative, not a guarantee:
+
+| Input | Time | Peak JS heap | Longest pause |
+|---|---|---|---|
+| 330 MB `export.xml` (3 years) | 1.3 s | about 190 MB | about 0.1 s |
+| 1 GB `export.xml` (7 years) | 3.1 s | about 190 MB | about 0.2 s |
+| `export.zip`, 78 MB, 1 GB inside | 6.7 s | about 590 MB | about 0.2 s |
+
+Zips made like an iPhone's (streamed entries, extra files ahead of `export.xml`, zip64) read correctly, and a wrong, truncated, empty or non-Health file gives a plain-language error instead of hanging. Phones have far less memory than a laptop, so export on the phone and open the file on a computer.
 
 ## Privacy
 
@@ -129,6 +141,7 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `analyzer.js` | Streaming parser and the checks (browser and Node) |
 | `sample.js` | Synthetic export generator with known faults |
 | `test.js` | Engine test |
+| `tools/make_big_export.py` | Generates 300 MB to 1 GB synthetic exports for stress testing |
 | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` | Icons |
 | `og.png` | Social preview image (1200×630), used for link previews |
 | `.github/workflows/test.yml` | Runs `node test.js` on every push and pull request |
