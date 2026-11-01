@@ -30,10 +30,13 @@ Your own watch is the result: each ring is as long as its sub-score, and the num
 
 ![The result: a watch whose four rings show the sleep, steps, heart-rate and coverage scores](docs/results.jpg)
 
-- **Findings** are dated and come with a chart drawn from your own readings: the night's heart rate against its sleeping ceiling, the single reading and the minutes around it, or the raw step total against what you actually walked. Filter them by sleep, steps, heart rate or coverage.
-- **Every day** is a calendar coloured by day score. Click a day to see its sleep, steps, heart rate, hours of watch data and any findings. **See this day** on a finding jumps straight to it.
+**Findings** are dated and come with a chart drawn from your own readings: the night's heart rate against its sleeping ceiling, the single reading and the minutes around it, or the raw step total against what you actually walked. Filter them by sleep, steps, heart rate or coverage.
 
 ![Findings with charts and category filters](docs/findings.jpg)
+
+**Every day** is a calendar coloured by day score. Click a day to see its sleep, steps, heart rate, hours of watch data and any findings. **See this day** on a finding jumps straight to it.
+
+![A calendar coloured by day score, with the selected day broken down underneath](docs/calendar.jpg)
 
 ## How the score works
 
@@ -129,7 +132,7 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` | Icons |
 | `og.png` | Social preview image (1200×630), used for link previews |
 | `.github/workflows/test.yml` | Runs `node test.js` on every push and pull request |
-| `docs/` | README images |
+| `docs/` | README screenshots, captured at 2× resolution |
 
 ## Author
 
