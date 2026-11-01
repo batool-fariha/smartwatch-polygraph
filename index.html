@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Polygraph: is your smartwatch lying to you?</title>
-<meta name="description" content="Upload your Apple Health export. Polygraph compares your sleep, steps and heart rate against each other and lists every place they disagree. Runs in your browser.">
+<title>Smartwatch Polygraph: is your watch lying to you?</title>
+<meta name="description" content="Upload your Apple Health export. Smartwatch Polygraph compares your sleep, steps and heart rate against each other and lists every place they disagree. Runs in your browser.">
 <meta name="theme-color" content="#f7f4ed">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -32,8 +32,7 @@ nav{position:sticky;top:0;z-index:5;background:rgba(247,244,237,.88);backdrop-fi
 nav>div{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center}
 nav a{color:inherit;text-decoration:none}
 .brand{display:flex;align-items:center;gap:10px;font:400 23px/1 var(--serif)}
-.mark{width:22px;height:22px;border-radius:6px;background:var(--orange);display:grid;place-items:center;flex:none}
-.mark svg{width:13px;height:13px;color:var(--ink)}
+.mark{width:26px;height:26px;display:block;flex:none}
 nav .r{margin-left:auto;display:flex;gap:26px;font-weight:500;font-size:14px;color:var(--muted)}
 nav .r a:hover{color:var(--ink)}
 @media (max-width:620px){nav .r{display:none}}
@@ -244,7 +243,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 </defs></svg>
 
 <nav><div>
-  <a class="brand" href="#top" data-go="top"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Polygraph</a>
+  <a class="brand" href="#top" data-go="top"><img class="mark" src="favicon.svg" alt="" width="26" height="26">Smartwatch Polygraph</a>
   <span class="r"><a href="#method" data-go="method">How it works</a><a href="#limits" data-go="limits">Limits</a><a href="#privacy" data-go="privacy">Privacy</a></span>
 </div></nav>
 
@@ -450,7 +449,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 
 <footer>
   <div class="foot">
-    <span class="brand"><span class="mark"><svg><use href="#i-pulse"/></svg></span>Polygraph</span>
+    <span class="brand"><img class="mark" src="favicon.svg" alt="" width="26" height="26">Smartwatch Polygraph</span>
     <span class="cr" id="credit"></span>
     <p class="tg">Free, no account. Your health data never leaves your browser.</p>
     <span class="r"><a href="#method" data-go="method">How scoring works</a><span class="ic" id="social"></span></span>
