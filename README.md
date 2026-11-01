@@ -1,5 +1,7 @@
 # Smartwatch Polygraph
 
+[![test](https://github.com/batool-fariha/smartwatch-polygraph/actions/workflows/test.yml/badge.svg)](https://github.com/batool-fariha/smartwatch-polygraph/actions/workflows/test.yml)
+
 **Is your smartwatch lying to you?** Upload an Apple Health export and Polygraph cross-examines it: your sleep against your heart rate, your phone's steps against your watch's, your heart rate against itself. It lists every place your own data contradicts itself and rolls them into a 0–100 trust score.
 
 **Live:** [smartwatch-polygraph.vercel.app](https://smartwatch-polygraph.vercel.app) · Everything runs in your browser. The export is never uploaded.
@@ -116,6 +118,8 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `sample.js` | Synthetic export generator with known faults |
 | `test.js` | Engine test |
 | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` | Icons |
+| `og.png` | Social preview image (1200×630), used for link previews |
+| `.github/workflows/test.yml` | Runs `node test.js` on every push and pull request |
 | `docs/` | README images |
 
 ## Author
