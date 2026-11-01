@@ -100,7 +100,7 @@ It is a static site with no build step.
 python3 -m http.server 8741
 ```
 
-Open <http://localhost:8741>, drop in an `export.zip` or `export.xml`, or press **Use sample data**. Unzipping loads [fflate](https://github.com/101arrowz/fflate) from a CDN once; if you are offline, unzip the export yourself and drop `export.xml`.
+Open <http://localhost:8741>, drop in an `export.zip` or `export.xml`, or press **Use sample data**. Everything the page needs, including the fonts and the unzip library ([fflate](https://github.com/101arrowz/fflate)), is bundled, so it works offline.
 
 To get an export: Health app → your profile picture → **Export All Health Data**.
 
@@ -126,7 +126,11 @@ Zips made like an iPhone's (streamed entries, extra files ahead of `export.xml`,
 
 ## Privacy
 
-The page has no backend. The export is parsed in the tab and nothing is sent anywhere. The only network requests are the page's own files, the fflate library and Google Fonts.
+The page has no backend. The export is parsed in the tab and nothing is sent anywhere. The page makes no third-party requests at all: the fonts and the unzip library are served from the same origin, so no CDN or font service sees you open it.
+
+## Accessibility
+
+Checked with [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.1 A and AA plus best practices) on both the landing page and the results screen, with no violations. Orange text uses darker shades (`#b84c00` for small text, `#e05e00` for large) so it meets contrast ratios, while the brand orange stays on fills. There is a skip link, the animated watch replays from the keyboard (Enter or Space), focus moves to the result heading when a result appears, and animations stay still for anyone with reduced motion turned on. This is an automated audit plus manual keyboard checks, not a full screen-reader review.
 
 ## Status and limits
 
@@ -148,8 +152,15 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `tools/make_big_export.py` | Generates 300 MB to 1 GB synthetic exports for stress testing |
 | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` | Icons |
 | `og.png` | Social preview image (1200×630), used for link previews |
+| `fonts/` | Instrument Serif and Inter Tight (WOFF2, Latin subset) with their SIL OFL licences |
+| `vendor/` | fflate, the unzip library, with its MIT licence |
+| `LICENSE` | MIT licence for the code |
 | `.github/workflows/test.yml` | Runs `node test.js` on every push and pull request |
 | `docs/` | README screenshots, captured at 2× resolution |
+
+## Licence
+
+The code is MIT licensed (see `LICENSE`). The bundled fonts, Instrument Serif and Inter Tight, are under the SIL Open Font License 1.1 (see `fonts/`), and fflate is MIT (see `vendor/`).
 
 ## Author
 

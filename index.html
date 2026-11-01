@@ -23,14 +23,16 @@
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/InstrumentSerif-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/InterTight.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+@font-face{font-family:"Instrument Serif";src:url(fonts/InstrumentSerif-Regular.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Instrument Serif";src:url(fonts/InstrumentSerif-Italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url(fonts/InterTight.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
 :root{
   color-scheme:light;
   --bg:#f7f4ed;--card:#fffdf9;--ink:#17171a;--muted:#6b675f;--line:#e3ddd0;
-  --orange:#ff7a00;--yellow:#ffd60a;
+  --orange:#ff7a00;--orange-text:#b84c00;--orange-large:#e05e00;--yellow:#ffd60a;
   --h0:#ece6da;--h1:#e8430c;--h2:#ff7a00;--h3:#ffb400;--h4:#ffe27a;
   --serif:"Instrument Serif","Iowan Old Style",Palatino,Georgia,serif;
   --sans:"Inter Tight",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -65,7 +67,7 @@ a.btn{display:inline-block;text-decoration:none}
 .hero-t .k{margin-bottom:24px}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:44px;padding-top:56px}}
 h1{font:400 clamp(48px,6.2vw,88px)/.95 var(--serif);letter-spacing:-.025em;margin:0 0 28px}
-h1 em{color:var(--orange)}
+h1 em{color:var(--orange-large)}
 .lede{font-size:clamp(17px,2vw,20px);line-height:1.45;color:var(--muted);max-width:30em;margin:0}
 
 .drop{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:32px;box-shadow:0 24px 60px -24px rgba(255,122,0,.28);transition:border-color .2s,box-shadow .2s}
@@ -79,6 +81,10 @@ h1 em{color:var(--orange)}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 button.ghost:hover{background:#f0ebe0}
 .btn:active,button:active{transform:scale(.97)}
+.skip{position:absolute;left:12px;top:-60px;z-index:20;background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none}
+.skip:focus{top:12px}
+.stage:focus-visible{outline:3px solid var(--yellow);outline-offset:6px;border-radius:24px}
+.verdict .g:focus{outline:none}
 .btn:focus-visible,button:focus-visible,#file:focus-visible+label,a:focus-visible,summary:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 .priv{font-size:13.5px;color:var(--muted);margin:16px 0 0}
 .dropmeta{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
@@ -127,7 +133,7 @@ details ol{margin:10px 0 0;padding-left:20px}
 .checkgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:start}
 .steps ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
 .steps li{display:grid;grid-template-columns:44px 1fr;gap:6px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line)}
-.steps li span{font:400 34px/1 var(--serif);color:var(--orange)}
+.steps li span{font:400 34px/1 var(--serif);color:var(--orange-large)}
 .steps li p{margin:0;font-size:16px;color:var(--muted);line-height:1.45}
 .steps li b{color:var(--ink);font-weight:600}
 @media (max-width:900px){.checkgrid{grid-template-columns:1fr;gap:36px}}
@@ -135,10 +141,10 @@ details ol{margin:10px 0 0;padding-left:20px}
 /* section heads */
 .sec{margin:104px 0 0}
 .k{display:flex;gap:10px;align-items:baseline;font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
-.k .n{color:var(--orange)}
+.k .n{color:var(--orange-text)}
 .sechead{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:end;margin:0 0 40px}
 .sechead h2{font:400 clamp(36px,5vw,58px)/1 var(--serif);letter-spacing:-.02em;margin:0;max-width:18ch}
-.sechead h2 em{color:var(--orange)}
+.sechead h2 em{color:var(--orange-large)}
 .sechead p{margin:0;color:var(--muted);font-size:16px;line-height:1.5;max-width:30em;padding-bottom:6px;justify-self:end;border-left:1px solid var(--line);padding-left:24px}
 @media (max-width:760px){.sechead{grid-template-columns:1fr;gap:16px}.sechead p{justify-self:start;border-left:0;padding-left:0}}
 
@@ -148,7 +154,7 @@ details ol{margin:10px 0 0;padding-left:20px}
 .fig{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:22px}
 .fig b{color:var(--muted);font-weight:500}
 .tile h3{font:400 clamp(24px,2.6vw,30px)/1.08 var(--serif);letter-spacing:-.015em;margin:0 0 10px}
-.tile h3 em{color:var(--orange)}
+.tile h3 em{color:var(--orange-large)}
 .tile p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.5;max-width:34em}
 .cap{font-size:12px;color:var(--muted);margin-top:14px;letter-spacing:.01em}
 .t-a{grid-column:span 6;display:grid;grid-template-columns:5fr 7fr;gap:0 56px;padding:32px 32px 28px}
@@ -167,7 +173,7 @@ details ol{margin:10px 0 0;padding-left:20px}
 @media (max-width:600px){.t-b,.t-c,.t-d{grid-column:span 6}.tile,.t-a{padding:24px}.tile{min-height:0}.t-e{flex-direction:column;align-items:flex-start;gap:20px;padding:24px}}
 
 svg text{font:500 10.5px var(--sans)}
-.f-m{fill:var(--muted)}.f-i{fill:var(--ink)}.f-o{fill:var(--orange)}
+.f-m{fill:var(--muted)}.f-i{fill:var(--ink)}.f-o{fill:var(--orange-text)}
 .gl{stroke:var(--line);stroke-width:1}
 
 .bars .bl{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);margin:0 0 7px}
@@ -175,7 +181,7 @@ svg text{font:500 10.5px var(--sans)}
 .bars .tr{display:flex;height:8px;border-radius:5px;overflow:hidden;background:var(--h0);margin-bottom:20px;gap:2px}
 .bars .tr i{display:block;height:100%}
 .bars .g{background:#8f8a7f}.bars .o{background:var(--orange)}
-.bars .dup{font-size:12.5px;color:var(--orange);font-weight:600;margin:-6px 0 0}
+.bars .dup{font-size:12.5px;color:var(--orange-text);font-weight:600;margin:-6px 0 0}
 
 /* method + limits */
 .meth{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink)}
@@ -197,7 +203,7 @@ footer{margin-top:128px;border-top:1px solid var(--line)}
 .foot{max-width:1080px;margin:0 auto;padding:26px 24px 38px;display:flex;align-items:center;gap:12px 30px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 .foot .brand{font-size:21px;color:var(--ink)}
 .foot a{color:var(--ink);text-decoration:none}
-.foot a:hover{color:var(--orange)}
+.foot a:hover{color:var(--orange-text)}
 .foot .cr a{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
 .foot .tg{margin:0;flex:1;min-width:230px}
 .foot .r{display:flex;gap:18px;align-items:center}
@@ -226,7 +232,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .rc>svg{width:21px;height:21px;flex:none;color:var(--orange);margin-top:4px}
 .rc b{display:block;font:400 23px/1.15 var(--serif);letter-spacing:-.01em;margin-bottom:6px}
 .rc span.d{font-size:14.5px;color:var(--muted);line-height:1.5;display:block}
-.tag{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--orange);display:block;margin-bottom:4px}
+.tag{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--orange-text);display:block;margin-bottom:4px}
 .heatwrap{padding:24px}
 .heat{display:grid;grid-auto-flow:column;grid-auto-columns:16px;justify-content:start;grid-template-rows:repeat(7,16px);gap:4px;overflow-x:auto;padding-bottom:6px}
 .heat i{width:16px;height:16px;border-radius:4px;background:var(--h0)}
@@ -253,7 +259,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .cv{margin-top:16px;max-width:560px}
 .cv svg{width:100%;height:auto;display:block}
 .cv.bars{max-width:340px}
-.lnk{margin-top:14px;display:block;background:none;border:0;padding:0;color:var(--orange);font:600 13px var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;border-radius:0}
+.lnk{margin-top:14px;display:block;background:none;border:0;padding:0;color:var(--orange-text);font:600 13px var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;border-radius:0}
 .lnk:hover{color:var(--ink);background:none}
 .heat .hd{width:16px;height:16px;border-radius:4px;border:0;padding:0;cursor:pointer;display:block}
 .heat .hd:hover{outline:2px solid var(--ink);outline-offset:1px;background-blend-mode:normal}
@@ -273,6 +279,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 </style>
 </head>
 <body>
+<a class="skip" href="#top">Skip to content</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3.4 13.5H10.1L12.4 4.9L15 19.1L16.9 13.5H20.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
@@ -300,7 +307,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
         <div class="row cta"><a class="btn primary" href="#check">Check your data</a><button class="ghost" id="heroDemo" type="button">See a sample result</button></div>
       </header>
 
-      <div class="stage" id="stage" role="group" aria-label="Animated smartwatch. Click to replay.">
+      <div class="stage" id="stage" role="button" tabindex="0" aria-label="Smartwatch showing a trust score of 87. Press to replay the animation.">
         <svg class="watch" viewBox="0 0 360 440" role="img" aria-label="A smartwatch whose four data rings come together to show a trust score of 87">
           <g class="strap-t"><path d="M128 112 L138 6 Q140 0 146 0 H214 Q220 0 222 6 L232 112 Z" fill="var(--orange)"/><path d="M146 16h68" stroke="rgba(23,23,26,.2)" stroke-width="2" stroke-dasharray="4 5"/></g>
           <g class="strap-b"><path d="M128 328 L138 434 Q140 440 146 440 H214 Q220 440 222 434 L232 328 Z" fill="var(--orange)"/><circle cx="180" cy="372" r="4" fill="rgba(23,23,26,.28)"/><circle cx="180" cy="394" r="4" fill="rgba(23,23,26,.28)"/><circle cx="180" cy="416" r="4" fill="rgba(23,23,26,.28)"/></g>
@@ -339,7 +346,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
       <div class="dropmeta">
         <p class="priv">The file is read in this tab and never uploaded.</p>
       </div>
-      <div id="prog"><div class="bar"><i id="pbar"></i></div><p class="priv" id="ptxt">Reading…</p></div>
+      <div id="prog" aria-live="polite"><div class="bar"><i id="pbar"></i></div><p class="priv" id="ptxt">Reading…</p></div>
       <div id="err" role="alert"></div>
     </section>
         <div class="steps">
@@ -469,7 +476,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
   <section id="out">
     <div class="panel hero in">
       <div class="rwatch" id="rwatch"></div>
-      <div class="verdict"><p class="g" id="grade"></p><p id="sum"></p><p class="s" id="span"></p>
+      <div class="verdict"><h1 class="g" id="grade" tabindex="-1"></h1><p id="sum"></p><p class="s" id="span"></p>
         <ul class="keys" id="keys"></ul>
         <div class="row" style="margin-top:22px"><button class="primary" id="share">Download share card</button><button class="ghost" id="again">Check another</button></div></div>
     </div>
@@ -501,7 +508,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<script src="vendor/fflate.min.js"></script>
 <script src="analyzer.js"></script>
 <script src="sample.js"></script>
 <script>
@@ -539,6 +546,7 @@ const SITE = {
   }
   function play() { if (reduce) return; stage.classList.remove('go'); void stage.offsetWidth; stage.classList.add('go'); count(); }
   stage.addEventListener('click', play);
+  stage.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(); } });
   play();
 })();
 
@@ -720,7 +728,7 @@ function render(rep) {
   const sc = Math.round(rep.scores.overall), f = rep.facts;
   const rw = $('#rwatch'); rw.innerHTML = resultWatch(rep); rw.classList.remove('go');
   if (!reduceMotion) { void rw.offsetWidth; rw.classList.add('go'); countTo($('#rscore'), sc, 1700, 800); }
-  $('#grade').textContent = rep.grade;
+  $('#grade').textContent = rep.grade; $('#grade').focus({ preventScroll: true });
   $('#keys').innerHTML = RINGS.map(([, col, k, name]) => `<li><i style="background:${col}"></i>${name} <b>${rep.scores[k] == null ? 'n/a' : Math.round(rep.scores[k])}</b></li>`).join('');
   $('#sum').textContent = f.nights ? `${f.flaggedNights} of ${f.nights} nights of sleep are contradicted by your own data.` : 'Not enough sleep data to check nights.';
   $('#span').textContent = `${rep.span.from} to ${rep.span.to} · ${rep.span.days} days · ${(rep.counts.hr + rep.counts.steps + rep.counts.sleep).toLocaleString()} records checked`;
