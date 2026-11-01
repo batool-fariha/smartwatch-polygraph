@@ -124,6 +124,7 @@
 
       const receipts = [];
       const dayOf = (m) => Math.floor(m / DAY) - firstDay;
+      const around = (m, w) => { const out = []; for (let i = lowerBound(ht, m - w); i < n && ht[i] <= m + w; i++) out.push([ht[i], Math.round(hv[i])]); return out; };
 
       /* ===== heart rate plausibility ===== */
       const dayBad = new Int32Array(nDays);
@@ -144,13 +145,13 @@
       const hrScore = n >= 100 ? clamp(100 - (hrBad / n) * 4000, 0, 100) : null;
       blipEv.sort((a, b) => Math.abs(b.v - (b.p + b.nx) / 2) - Math.abs(a.v - (a.p + a.nx) / 2));
       for (const b of blipEv.slice(0, 2)) receipts.push({
-        kind: 'hr', severity: 62, date: fmtDay(Math.floor(b.m / DAY)),
+        kind: 'hr', severity: 62, date: fmtDay(Math.floor(b.m / DAY)), day: Math.floor(b.m / DAY), chart: { type: 'blip', at: b.m, v: Math.round(b.v), pts: around(b.m, 20) },
         title: `Heart rate "jumped" to ${Math.round(b.v)} bpm for a single reading`,
         detail: `At ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))} it read ${Math.round(b.p)}, then ${Math.round(b.v)}, then ${Math.round(b.nx)} bpm within minutes, outside any workout. A physiological spike doesn't reverse itself that fast; this is a sensor glitch (usually a loose strap).`
       });
       impEv.sort((a, b) => Math.abs(b.v - 130) - Math.abs(a.v - 130));
       for (const b of impEv.slice(0, 2)) receipts.push({
-        kind: 'hr', severity: 72, date: fmtDay(Math.floor(b.m / DAY)),
+        kind: 'hr', severity: 72, date: fmtDay(Math.floor(b.m / DAY)), day: Math.floor(b.m / DAY), chart: { type: 'blip', at: b.m, v: Math.round(b.v), pts: around(b.m, 20) },
         title: `An impossible heart rate: ${Math.round(b.v)} bpm`,
         detail: `Recorded at ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))}. Outside 30–230 bpm isn't a plausible human reading; it's stored in your export all the same.`
       });
@@ -178,6 +179,7 @@
 
       let sleepNum = 0, sleepDen = 0, flaggedNights = 0;
       const sleepPenByDay = new Map();
+      const sleepInfoByDay = new Map();
       for (const ss of scored) {
         let hrN = 0, hrElev = 0, hrPeak = 0;
         const elev = new Set(), walk = new Set();
@@ -204,6 +206,8 @@
         sleepNum += trust * ss.asleepMin; sleepDen += ss.asleepMin;
         const wakeDi = Math.floor(ss.e / DAY) - firstDay;
         sleepPenByDay.set(wakeDi, Math.max(sleepPenByDay.get(wakeDi) || 0, 1 - trust));
+        const prevInfo = sleepInfoByDay.get(wakeDi);
+        if (!prevInfo || ss.asleepMin > prevInfo.asleepMin) sleepInfoByDay.set(wakeDi, { trust, asleepMin: ss.asleepMin });
         if (trust < 0.8) {
           flaggedNights++;
           const main = pens.slice().sort((a, b) => b.pen - a.pen)[0].key;
@@ -225,7 +229,12 @@
             title = `${dur} of sleep on ${day} without any heart-rate data`;
             detail = `A watch logged the sleep, but only ${hrN} pulse readings exist in that window. Nothing corroborates it.`;
           }
-          receipts.push({ kind: 'sleep', severity: Math.round((1 - trust) * 100), date: day, title, detail });
+          const pts = [];
+          for (let i = lowerBound(ht, ss.s); i < n && ht[i] < ss.e; i++) pts.push([ht[i], Math.round(hv[i])]);
+          const stp = Math.max(1, Math.ceil(pts.length / 160));
+          const chart = { type: 'sleep', s: ss.s, e: ss.e, thr: Math.round(thr), peak: Math.round(hrPeak),
+            pts: pts.filter((p, i) => i % stp === 0 || p[1] >= thr), blocks: ss.blocks.map((b) => [b.s, b.e]) };
+          receipts.push({ kind: 'sleep', severity: Math.round((1 - trust) * 100), date: day, day: wakeDi + firstDay, title, detail, chart });
         }
       }
       const sleepScore = sleepDen ? (sleepNum / sleepDen) * 100 : null;
@@ -251,7 +260,7 @@
       }
       stepDays.sort((a, b) => b.raw - b.dedup - (a.raw - a.dedup));
       for (const d of stepDays.slice(0, 3)) receipts.push({
-        kind: 'steps', severity: Math.round(Math.min(100, d.f * 100)), date: fmtDay(d.di + firstDay),
+        kind: 'steps', severity: Math.round(Math.min(100, d.f * 100)), date: fmtDay(d.di + firstDay), day: d.di + firstDay, chart: { type: 'steps', raw: Math.round(d.raw), dedup: Math.round(d.dedup) },
         title: `${Math.round(d.raw).toLocaleString('en-US')} steps on ${fmtDay(d.di + firstDay)}, but you only moved ${Math.round(d.dedup).toLocaleString('en-US')}`,
         detail: `Phone and watch both recorded the same walking, so the raw export overstates the day by ${Math.round(d.f * 100)}%. Apple's own Health app de-duplicates this, but anyone analysing the raw export (apps, researchers, clinical pipelines) doesn't.`
       });
@@ -290,13 +299,13 @@
           darkRuns.push({ from: dark[i], len: j - i + 1 }); i = j + 1;
         }
         if (recurring) receipts.push({
-          kind: 'coverage', severity: 45, date: '',
+          kind: 'coverage', severity: 45, date: '', day: null, chart: { type: 'gaps', hour: recurring.hour },
           title: `Your watch goes dark around ${String(recurring.hour).padStart(2, '0')}:00 on ${recurring.days} of ${recurring.of} days`,
           detail: `That's the charging window. It silently removes about ${(hoursLost / coverageDays).toFixed(1)} h/day from your record, and anything computed per-day (average heart rate, active time) is computed over a different slice of the day each time.`
         });
         darkRuns.sort((a, b) => b.len - a.len);
         for (const r of darkRuns.slice(0, 1)) receipts.push({
-          kind: 'coverage', severity: 55, date: fmtDay(r.from + firstDay),
+          kind: 'coverage', severity: 55, date: fmtDay(r.from + firstDay), day: r.from + firstDay,
           title: `${r.len} day${r.len > 1 ? 's' : ''} of nothing starting ${fmtDay(r.from + firstDay)}`,
           detail: `No heart-rate data at all. In a daily summary these days look like "0", not "missing", unless the reader knows to check.`
         });
@@ -306,12 +315,14 @@
       const daily = [];
       for (let di = 0; di < nDays; di++) {
         const c = covByDay.get(di); // keyed by day index relative to firstDay
-        if (c === undefined) { daily.push({ day: firstDay + di, score: null }); continue; }
+        if (c === undefined) { daily.push({ day: firstDay + di, score: null, hours: 0, rawSteps: Math.round(dayRaw[di]), dedupSteps: Math.round(dayDedup[di]), hrBad: dayBad[di], sleepMin: 0, sleepTrust: null }); continue; }
         const sp = (sleepPenByDay.get(di) || 0) * 40;
         const tp = stepPenByDay.get(di) || 0;
         const hp = Math.min(20, dayBad[di] * 8);
         const cp = (1 - Math.min(1, c / 18)) * 30;
-        daily.push({ day: firstDay + di, score: Math.round(clamp(100 - sp - tp - hp - cp, 0, 100)) });
+        const si = sleepInfoByDay.get(di);
+        daily.push({ day: firstDay + di, score: Math.round(clamp(100 - sp - tp - hp - cp, 0, 100)), hours: c, rawSteps: Math.round(dayRaw[di]), dedupSteps: Math.round(dayDedup[di]),
+          hrBad: dayBad[di], sleepMin: si ? Math.round(si.asleepMin) : 0, sleepTrust: si ? si.trust : null });
       }
 
       /* ===== overall ===== */
@@ -344,5 +355,5 @@
     return { addRecord, addWorkout, finish, counts };
   }
 
-  return { createAnalyzer, createParser, fmtDay, fmtDur };
+  return { createAnalyzer, createParser, fmtDay, fmtDur, hhmm };
 });

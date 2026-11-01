@@ -102,15 +102,15 @@ details ol{margin:10px 0 0;padding-left:20px}
 .chip.l{left:0}.chip.r{right:0}
 .chip b{display:flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;font-weight:600}
 .chip b i{width:7px;height:7px;border-radius:50%;display:block}
-.stage.go .strap-t{animation:dropT .9s var(--e) backwards}
-.stage.go .strap-b{animation:dropB .9s var(--e) backwards}
-.stage.go .case{animation:caseIn .9s var(--e) .1s backwards;transform-origin:180px 220px}
-.stage.go .crown{animation:crown .6s var(--e) .55s backwards}
-.stage.go .rg{animation:gather 1.1s var(--e) var(--dl) backwards;transform-origin:180px 220px}
-.stage.go .arc{animation:draw .9s var(--e) calc(var(--dl) + .45s) backwards}
-.stage.go .arc.hr{animation:draw .9s var(--e) calc(var(--dl) + .45s) backwards,glitch .6s steps(1) 2.55s}
-.stage.go #wscore{animation:fadeS .5s ease 1.5s backwards}
-.stage.go .chip{animation:pop .55s var(--e) var(--dl) backwards}
+.go .strap-t{animation:dropT .9s var(--e) backwards}
+.go .strap-b{animation:dropB .9s var(--e) backwards}
+.go .case{animation:caseIn .9s var(--e) .1s backwards;transform-origin:180px 220px}
+.go .crown{animation:crown .6s var(--e) .55s backwards}
+.go .rg{animation:gather 1.1s var(--e) var(--dl) backwards;transform-origin:180px 220px}
+.go .arc{animation:draw .9s var(--e) calc(var(--dl) + .45s) backwards}
+.go .arc.hr{animation:draw .9s var(--e) calc(var(--dl) + .45s) backwards,glitch .6s steps(1) 2.55s}
+.go .wscore{animation:fadeS .5s ease 1.5s backwards}
+.go .chip{animation:pop .55s var(--e) var(--dl) backwards}
 @keyframes dropT{from{transform:translateY(-90px);opacity:0}}
 @keyframes dropB{from{transform:translateY(90px);opacity:0}}
 @keyframes caseIn{from{transform:scale(.86);opacity:0}}
@@ -208,11 +208,7 @@ footer{margin-top:128px;border-top:1px solid var(--line)}
 /* results */
 #out{display:none}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
-.hero{display:flex;gap:52px;align-items:center;flex-wrap:wrap;padding:48px;margin-top:44px}
-.ring{position:relative;width:230px;height:230px;flex:none}
-.ring svg{transform:rotate(-90deg);width:100%;height:100%}
-.ring .n{position:absolute;inset:0;display:grid;place-items:center;font:400 96px/1 var(--serif);letter-spacing:-.03em}
-.ring .n small{display:block;font:600 11px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:4px;text-align:center}
+.hero{display:flex;gap:56px;align-items:center;flex-wrap:wrap;padding:40px 48px;margin-top:44px}
 .verdict{flex:1;min-width:250px;max-width:460px}
 .verdict .g{font:400 clamp(38px,5.4vw,58px)/1 var(--serif);letter-spacing:-.02em;margin:0}
 .verdict p{margin:12px 0 0;color:var(--muted)}
@@ -232,7 +228,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .rc span.d{font-size:14.5px;color:var(--muted);line-height:1.5;display:block}
 .tag{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--orange);display:block;margin-bottom:4px}
 .heatwrap{padding:24px}
-.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,16px);gap:4px;overflow-x:auto;padding-bottom:6px}
+.heat{display:grid;grid-auto-flow:column;grid-auto-columns:16px;justify-content:start;grid-template-rows:repeat(7,16px);gap:4px;overflow-x:auto;padding-bottom:6px}
 .heat i{width:16px;height:16px;border-radius:4px;background:var(--h0)}
 .legend{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
 .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
@@ -241,7 +237,39 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .in{animation:up .6s cubic-bezier(.2,.8,.2,1) both}
 @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.in{animation:none}.btn,button,.card .m i{transition:none}html{scroll-behavior:auto}}
-@media (max-width:560px){.hero-t{padding-top:52px}.ring{width:190px;height:190px}.ring .n{font-size:78px}.hero{padding:30px 24px;gap:26px}.drop{padding:24px 22px}}
+@media (max-width:560px){.hero-t{padding-top:52px}.rwatch{width:190px}.hero{padding:30px 24px;gap:26px}.drop{padding:24px 22px}}
+
+/* results: own watch, filters, charts, day detail */
+.rwatch{width:250px;flex:none}
+.rwatch svg{width:100%;height:auto;display:block;filter:drop-shadow(0 24px 24px rgba(255,122,0,.22))}
+.keys{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.keys li{display:flex;align-items:center;gap:7px}.keys i{width:9px;height:9px;border-radius:50%;display:block}.keys b{color:var(--ink);font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.fb{font:600 13px/1 var(--sans);padding:9px 14px;border-radius:99px;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.fb span{color:var(--muted);font-weight:500;margin-left:4px}
+.fb:hover{background:#f0ebe0}
+.fb.on,.fb.on:hover{background:var(--ink);color:#fff;border-color:var(--ink)}.fb.on span{color:rgba(255,255,255,.65)}
+.rc .body{flex:1;min-width:0}
+.cv{margin-top:16px;max-width:560px}
+.cv svg{width:100%;height:auto;display:block}
+.cv.bars{max-width:340px}
+.lnk{margin-top:14px;display:block;background:none;border:0;padding:0;color:var(--orange);font:600 13px var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;border-radius:0}
+.lnk:hover{color:var(--ink);background:none}
+.heat .hd{width:16px;height:16px;border-radius:4px;border:0;padding:0;cursor:pointer;display:block}
+.heat .hd:hover{outline:2px solid var(--ink);outline-offset:1px;background-blend-mode:normal}
+.heat .hd.sel{outline:2px solid var(--ink);outline-offset:2px}
+.daydetail{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
+.dd-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.dd-h b{font:400 28px/1.1 var(--serif);letter-spacing:-.01em}
+.dd-s{font-size:13px;color:var(--muted)}.dd-s strong{color:var(--ink);font-size:15px}
+.dd{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 24px;margin:0 0 16px}
+.dd div{border-top:1px solid var(--line);padding-top:8px}
+.dd dt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dd dd{margin:3px 0 0;font-size:14.5px}
+.dd-f{margin:0;padding:0;list-style:none;font-size:14.5px}
+.dd-f li{padding:8px 0;border-top:1px solid var(--line)}
+.dd-none{font-size:14px;color:var(--muted);margin:0}
+@media (max-width:560px){.hero{padding:28px 22px}.rwatch{width:170px}.rc>svg{display:none}.rc{padding:18px}}
 </style>
 </head>
 <body>
@@ -282,7 +310,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
           <g class="rg" style="--dl:.68s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="64" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc" cx="180" cy="220" r="64" fill="none" stroke="#ff7a00" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:402.12;--c:402.12;--off:164.87;stroke-dashoffset:164.87"/></g></g>
           <g class="rg" style="--dl:.81s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="48" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc hr" cx="180" cy="220" r="48" fill="none" stroke="#ff5a1f" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:301.59;--c:301.59;--off:6.03;stroke-dashoffset:6.03"/></g></g>
           <g class="rg" style="--dl:.94s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="32" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc" cx="180" cy="220" r="32" fill="none" stroke="#ffb400" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:201.06;--c:201.06;--off:10.05;stroke-dashoffset:10.05"/></g></g>
-          <text id="wscore" x="180" y="235" text-anchor="middle" fill="#f7f4ed" style="font:400 44px var(--serif)">87</text>
+          <text id="wscore" class="wscore" x="180" y="235" text-anchor="middle" fill="#f7f4ed" style="font:400 44px var(--serif)">87</text>
         </svg>
         <div class="chips">
           <div class="chip l" style="top:9%;--dl:2.7s"><b><i style="background:#ffd60a"></i>Sleep</b>22 readings over 90 bpm</div>
@@ -440,8 +468,9 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 
   <section id="out">
     <div class="panel hero in">
-      <div class="ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="none" stroke="var(--h0)" stroke-width="9"/><circle id="arc" cx="100" cy="100" r="90" fill="none" stroke="var(--orange)" stroke-width="9" stroke-linecap="round" stroke-dasharray="565.5" stroke-dashoffset="565.5"/></svg><div class="n"><div><span id="score">0</span><small>Trust score</small></div></div></div>
+      <div class="rwatch" id="rwatch"></div>
       <div class="verdict"><p class="g" id="grade"></p><p id="sum"></p><p class="s" id="span"></p>
+        <ul class="keys" id="keys"></ul>
         <div class="row" style="margin-top:22px"><button class="primary" id="share">Download share card</button><button class="ghost" id="again">Check another</button></div></div>
     </div>
 
@@ -449,12 +478,14 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
     <div class="grid" id="cards"></div>
 
     <h2 class="rh">What it found</h2>
+    <div class="filters" id="filters"></div>
     <div id="receipts"></div>
 
     <h2 class="rh">Every day</h2>
-    <div class="panel heatwrap">
+    <div class="panel heatwrap" id="heatwrap">
       <div class="heat" id="heat" aria-label="Daily trust score calendar"></div>
-      <div class="legend"><i style="background:var(--h4)"></i>clean <i style="background:var(--h3)"></i><i style="background:var(--h2)"></i><i style="background:var(--h1)"></i>contradictory <i style="background:var(--h0);margin-left:8px"></i>no data</div>
+      <div class="legend"><i style="background:var(--h4)"></i>clean <i style="background:var(--h3)"></i><i style="background:var(--h2)"></i><i style="background:var(--h1)"></i>contradictory <i style="background:var(--h0);margin-left:8px"></i>no data · click a day</div>
+      <div class="daydetail" id="daydetail"></div>
     </div>
 
     <p class="panel note"><b>Read this as a data-quality check.</b> A flag means two of your signals disagree, not that your watch is wrong. It isn’t a medical device, and the thresholds are heuristics.</p>
@@ -592,18 +623,105 @@ async function run(file) {
 }
 
 const bucket = (s) => s === null ? 'var(--h0)' : s >= 92 ? 'var(--h4)' : s >= 80 ? 'var(--h3)' : s >= 65 ? 'var(--h2)' : 'var(--h1)';
+const RINGS = [[80, '#ffd60a', 'sleep', 'Sleep'], [64, '#ff7a00', 'steps', 'Steps'], [48, '#ff5a1f', 'hr', 'Heart rate'], [32, '#ffb400', 'coverage', 'Coverage']];
+const NAMES = { all: 'All', sleep: 'Sleep', steps: 'Steps', hr: 'Heart rate', coverage: 'Coverage' };
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const num = (n) => Math.round(n).toLocaleString('en-US');
+const hm = (t) => WearableTrust.hhmm(t);
+let FILTER = 'all';
+
+/* the user's own watch: ring length = their sub-score */
+function resultWatch(rep) {
+  const base = ['.strap-t', '.strap-b', '.crown', '.case'].map((q) => document.querySelector('#stage svg ' + q).outerHTML).join('');
+  const dl = [.55, .68, .81, .94], glitch = rep.facts.hrBlips + rep.facts.hrImpossible > 0;
+  const rings = RINGS.map(([r, col, k], i) => {
+    const sc = rep.scores[k], C = 2 * Math.PI * r, off = C * (1 - (sc == null ? 0 : sc / 100));
+    return `<g class="rg" style="--dl:${dl[i]}s"><g transform="rotate(-90 180 220)"><circle cx="180" cy="220" r="${r}" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/><circle class="arc${k === 'hr' && glitch ? ' hr' : ''}" cx="180" cy="220" r="${r}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round" style="stroke-dasharray:${C.toFixed(2)};--c:${C.toFixed(2)};--off:${off.toFixed(2)};stroke-dashoffset:${off.toFixed(2)}"/></g></g>`;
+  }).join('');
+  const sc = Math.round(rep.scores.overall);
+  return `<svg viewBox="0 0 360 440" role="img" aria-label="Your watch. Trust score ${sc} out of 100.">${base}${rings}<text id="rscore" class="wscore" x="180" y="235" text-anchor="middle" fill="#f7f4ed" style="font:400 44px var(--serif)">${sc}</text></svg>`;
+}
+function countTo(el, target, delayMs, dur) {
+  const t0 = performance.now() + delayMs; el.textContent = '0';
+  (function f(now) { const p = Math.min(1, Math.max(0, (now - t0) / dur)); el.textContent = p < 1 ? Math.round(target * (1 - Math.pow(1 - p, 3))) : target; if (p < 1) requestAnimationFrame(f); })(performance.now());
+}
+
+/* mini charts, built from the user's own readings */
+function sleepChart(c) {
+  const W = 520, H = 150, L = 30, R = 6, T = 14, B = 44, span = c.e - c.s, xs = (t) => L + (t - c.s) / span * (W - L - R);
+  const vs = c.pts.length ? c.pts.map((p) => p[1]) : [60];
+  const lo = Math.min(40, Math.min(...vs) - 4), hi = Math.max(c.thr + 14, Math.max(...vs) + 6), ys = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const line = c.pts.map((p) => `${xs(p[0]).toFixed(1)},${ys(p[1]).toFixed(1)}`).join(' ');
+  const hot = c.pts.filter((p) => p[1] >= c.thr).map((p) => `<circle cx="${xs(p[0]).toFixed(1)}" cy="${ys(p[1]).toFixed(1)}" r="2.6" fill="var(--orange)"/>`).join('');
+  const bar = c.blocks.map((b) => `<rect x="${xs(b[0]).toFixed(1)}" y="${H - B + 10}" width="${Math.max(1, xs(b[1]) - xs(b[0])).toFixed(1)}" height="12" rx="3" fill="var(--yellow)"/>`).join('');
+  const yt = ys(c.thr).toFixed(1);
+  return `<div class="cv"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Heart rate across the night. Readings above ${c.thr} bpm are marked in orange."><line x1="${L}" x2="${W - R}" y1="${yt}" y2="${yt}" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".6"/><text x="${W - R}" y="${yt - 5}" text-anchor="end" class="f-m">${c.thr} bpm ceiling</text>${line ? `<polyline points="${line}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/>` : ''}${hot}<text x="${L}" y="${H - B + 4}" class="f-m">Logged as asleep</text>${bar}<text x="${L}" y="${H - 2}" class="f-m">${hm(c.s)}</text><text x="${W - R}" y="${H - 2}" text-anchor="end" class="f-m">${hm(c.e)}</text></svg></div>`;
+}
+function blipChart(c) {
+  if (!c.pts.length) return '';
+  const W = 300, H = 96, L = 8, R = 8, T = 18, B = 24, x0 = c.at - 20, x1 = c.at + 20, xs = (t) => L + (t - x0) / (x1 - x0) * (W - L - R);
+  const vs = c.pts.map((p) => p[1]), lo = Math.min(...vs) - 6, hi = Math.max(...vs) + 6, ys = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const mx = xs(c.at), my = ys(c.v), right = mx > W - 70;
+  return `<div class="cv" style="max-width:300px"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Heart rate for 20 minutes either side of the reading of ${c.v} bpm"><polyline points="${c.pts.map((p) => `${xs(p[0]).toFixed(1)},${ys(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="4" fill="var(--orange)"/><text x="${(mx + (right ? -9 : 9)).toFixed(1)}" y="${(my + 4).toFixed(1)}" text-anchor="${right ? 'end' : 'start'}" class="f-o" style="font-weight:600;font-size:12px">${c.v} bpm</text><text x="${L}" y="${H - 4}" class="f-m">${hm(x0)}</text><text x="${W - R}" y="${H - 4}" text-anchor="end" class="f-m">${hm(x1)}</text></svg></div>`;
+}
+function stepsChart(c) {
+  const g = Math.max(0, Math.min(100, c.dedup / c.raw * 100));
+  return `<div class="cv bars"><div class="bl"><span>In the export</span><b>${num(c.raw)}</b></div><div class="tr"><i class="g" style="width:${g.toFixed(1)}%"></i><i class="o" style="width:${(100 - g).toFixed(1)}%"></i></div><div class="bl"><span>What you walked</span><b>${num(c.dedup)}</b></div><div class="tr"><i class="g" style="width:${g.toFixed(1)}%"></i></div></div>`;
+}
+function gapChart(c) {
+  let h = '';
+  for (let d = 0; d < 5; d++) for (let k = 0; k < 24; k++) h += `<rect x="${k * 10}" y="${d * 11}" width="8" height="9" rx="2" fill="${k === c.hour && d !== 2 ? 'var(--h0)' : 'var(--yellow)'}"/>`;
+  return `<div class="cv" style="max-width:340px"><svg viewBox="0 0 240 70" role="img" aria-label="Five example days of hourly watch data with the ${String(c.hour).padStart(2, '0')}:00 hour empty">${h}<text x="0" y="68" class="f-m">00</text><text x="104" y="68" class="f-m">12</text><text x="214" y="68" class="f-m">23</text></svg></div>`;
+}
+function chartHTML(r) {
+  const c = r.chart; if (!c) return '';
+  return c.type === 'sleep' ? sleepChart(c) : c.type === 'blip' ? blipChart(c) : c.type === 'steps' ? stepsChart(c) : c.type === 'gaps' ? gapChart(c) : '';
+}
+function receiptCard(r, i) {
+  return `<div class="panel rc in" style="animation-delay:${Math.min(i, 8) * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div class="body"><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span>${chartHTML(r)}${r.day != null ? `<button type="button" class="lnk" data-day="${r.day}">See this day</button>` : ''}</div></div>`;
+}
+function renderReceipts() {
+  const rs = REPORT.receipts, counts = { all: rs.length };
+  rs.forEach((r) => { counts[r.kind] = (counts[r.kind] || 0) + 1; });
+  $('#filters').innerHTML = rs.length ? Object.keys(NAMES).filter((k) => counts[k]).map((k) => `<button type="button" class="fb${FILTER === k ? ' on' : ''}" data-k="${k}" aria-pressed="${FILTER === k}">${NAMES[k]}<span>${counts[k]}</span></button>`).join('') : '';
+  const list = rs.filter((r) => FILTER === 'all' || r.kind === FILTER);
+  $('#receipts').innerHTML = list.length ? list.map(receiptCard).join('') : '<p>Nothing contradictory found. Your watch is behaving.</p>';
+}
+
+/* calendar and day detail */
+function renderHeat() {
+  const d = REPORT.daily, pad = (new Date(d[0].day * 86400000).getUTCDay() + 6) % 7;
+  $('#heat').innerHTML = '<i style="visibility:hidden"></i>'.repeat(pad) + d.map((x, i) => {
+    const label = `${WearableTrust.fmtDay(x.day)}: ${x.score === null ? 'no data' : x.score + ' out of 100'}`;
+    return `<button type="button" class="hd" data-i="${i}" style="background:${bucket(x.score)}" aria-label="${esc(label)}" title="${esc(label)}"></button>`;
+  }).join('');
+  let worst = -1; d.forEach((x, i) => { if (x.score !== null && (worst < 0 || x.score < d[worst].score)) worst = i; });
+  if (worst >= 0) openDay(worst, false); else $('#daydetail').innerHTML = '';
+}
+function openDay(i, scroll) {
+  const x = REPORT.daily[i]; if (!x) return;
+  document.querySelectorAll('#heat .hd').forEach((b) => b.classList.toggle('sel', +b.dataset.i === i));
+  const fs = REPORT.receipts.filter((r) => r.day === x.day);
+  const sleep = x.sleepMin ? `${WearableTrust.fmtDur(x.sleepMin)} asleep, ${Math.round(x.sleepTrust * 100)}% trusted` : 'No sleep logged';
+  const steps = x.rawSteps ? (x.rawSteps > x.dedupSteps * 1.05 ? `${num(x.rawSteps)} in the export, ${num(x.dedupSteps)} real` : `${num(x.dedupSteps)} steps`) : 'No steps';
+  const hr = x.hrBad ? `${x.hrBad} suspect reading${x.hrBad > 1 ? 's' : ''}` : 'No suspect readings';
+  $('#daydetail').innerHTML = `<div class="dd-h"><b>${esc(WearableTrust.fmtDay(x.day))}</b><span class="dd-s">Day score <strong>${x.score === null ? 'n/a' : x.score}</strong> / 100</span></div>
+    <dl class="dd"><div><dt>Sleep</dt><dd>${sleep}</dd></div><div><dt>Steps</dt><dd>${steps}</dd></div><div><dt>Heart rate</dt><dd>${hr}</dd></div><div><dt>Watch data</dt><dd>${x.hours} of 24 hours</dd></div></dl>
+    ${fs.length ? `<ul class="dd-f">${fs.map((r) => `<li>${esc(r.title)}</li>`).join('')}</ul>` : '<p class="dd-none">No findings on this day.</p>'}`;
+  if (scroll) document.getElementById('heatwrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+$('#filters').addEventListener('click', (e) => { const b = e.target.closest('.fb'); if (b) { FILTER = b.dataset.k; renderReceipts(); } });
+$('#receipts').addEventListener('click', (e) => { const b = e.target.closest('.lnk'); if (b) openDay(+b.dataset.day - REPORT.daily[0].day, true); });
+$('#heat').addEventListener('click', (e) => { const b = e.target.closest('.hd'); if (b) openDay(+b.dataset.i, false); });
 
 function render(rep) {
-  REPORT = rep;
+  REPORT = rep; FILTER = 'all';
   $('#landing').style.display = 'none'; $('#prog').style.display = 'none'; $('#out').style.display = 'block';
-  const sc = Math.round(rep.scores.overall);
-  const target = $('#score'); let cur = 0;
-  const step = () => { cur = Math.min(sc, cur + Math.max(1, Math.round(sc / 40))); target.textContent = cur; if (cur < sc) requestAnimationFrame(step); };
-  step();
-  const arc = $('#arc');
-  arc.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)'; requestAnimationFrame(() => arc.setAttribute('stroke-dashoffset', 565.5 * (1 - sc / 100)));
+  const sc = Math.round(rep.scores.overall), f = rep.facts;
+  const rw = $('#rwatch'); rw.innerHTML = resultWatch(rep); rw.classList.remove('go');
+  if (!reduceMotion) { void rw.offsetWidth; rw.classList.add('go'); countTo($('#rscore'), sc, 1700, 800); }
   $('#grade').textContent = rep.grade;
-  const f = rep.facts;
+  $('#keys').innerHTML = RINGS.map(([, col, k, name]) => `<li><i style="background:${col}"></i>${name} <b>${rep.scores[k] == null ? 'n/a' : Math.round(rep.scores[k])}</b></li>`).join('');
   $('#sum').textContent = f.nights ? `${f.flaggedNights} of ${f.nights} nights of sleep are contradicted by your own data.` : 'Not enough sleep data to check nights.';
   $('#span').textContent = `${rep.span.from} to ${rep.span.to} · ${rep.span.days} days · ${(rep.counts.hr + rep.counts.steps + rep.counts.sleep).toLocaleString()} records checked`;
 
@@ -619,14 +737,7 @@ function render(rep) {
   }).join('');
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.card .m i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
 
-  $('#receipts').innerHTML = rep.receipts.length
-    ? rep.receipts.map((r, i) => `<div class="panel rc in" style="animation-delay:${i * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span></div></div>`).join('')
-    : '<p>Nothing contradictory found. Your watch is behaving.</p>';
-
-  const d = rep.daily, first = new Date(d[0].day * 86400000).getUTCDay();
-  const pad = (first + 6) % 7;
-  $('#heat').innerHTML = '<i style="visibility:hidden"></i>'.repeat(pad) + d.map((x) =>
-    `<i style="background:${bucket(x.score)}" title="${esc(WearableTrust.fmtDay(x.day))}: ${x.score === null ? 'no data' : x.score}"></i>`).join('');
+  renderReceipts(); renderHeat();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

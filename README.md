@@ -24,7 +24,16 @@ Polygraph doesn't need a ground-truth device to catch this. It looks for places 
 | Heart rate | Readings outside 30–230 bpm, single-reading spikes outside workouts | "71, then 184, then 73 bpm within minutes" |
 | Coverage | Recurring charging gaps and days with no data | "Your watch goes dark around 07:00 on 25 of 61 days" |
 
-![A list of findings, each with a date, a plain-language title and the evidence](docs/findings.jpg)
+## The results screen
+
+Your own watch is the result: each ring is as long as its sub-score, and the number in the middle is the overall score.
+
+![The result: a watch whose four rings show the sleep, steps, heart-rate and coverage scores](docs/results.jpg)
+
+- **Findings** are dated and come with a chart drawn from your own readings: the night's heart rate against its sleeping ceiling, the single reading and the minutes around it, or the raw step total against what you actually walked. Filter them by sleep, steps, heart rate or coverage.
+- **Every day** is a calendar coloured by day score. Click a day to see its sleep, steps, heart rate, hours of watch data and any findings. **See this day** on a finding jumps straight to it.
+
+![Findings with charts and category filters](docs/findings.jpg)
 
 ## How the score works
 
