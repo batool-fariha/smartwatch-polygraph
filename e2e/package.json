@@ -1,0 +1,13 @@
+{
+  "name": "smartwatch-polygraph-e2e",
+  "private": true,
+  "description": "Browser tests for Smartwatch Polygraph. Kept separate from the site so Vercel never installs it.",
+  "scripts": {
+    "test": "node e2e.js",
+    "test:stress": "node e2e.js --stress"
+  },
+  "devDependencies": {
+    "axe-core": "4.10.2",
+    "playwright-core": "1.52.0"
+  }
+}

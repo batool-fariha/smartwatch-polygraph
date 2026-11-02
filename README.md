@@ -110,11 +110,26 @@ To get an export: Health app → your profile picture → **Export All Health Da
 
 ## Test
 
-`sample.js` generates a synthetic export with known faults planted in it: a night spent dancing, a night logged by two sources, a watch left on a desk, heart-rate glitches, a dead day. `test.js` checks that each one is found, that the right source is named for each (the phone for the extra steps, the watch for the glitches), that a single-source export claims no overlap, and that the parser copes with records split across chunk boundaries.
+There are three layers. The first two need only Node 20 or later.
+
+**Engine test.** `sample.js` generates a synthetic export with known faults planted in it: a night spent dancing, a night logged by two sources, a watch left on a desk, heart-rate glitches, a dead day. `test/engine.test.js` checks that each one is found, that the right source is named for each (the phone for the extra steps, the watch for the glitches), and that a single-source export claims no overlap.
+
+**Rule tests.** `test/rules.test.js` builds tiny exports by hand and pins every rule at its boundary, so changing a threshold fails a test with a clear name. For example: a 59 bpm jump is not a spike but 60 is, a 720 minute sleep is fine but 721 is flagged, a gap at the same hour on 3 of 10 days is recurring but 2 of 10 is not, and splitting the file at every possible byte offset gives the same result.
 
 ```bash
-node test.js
+node --test test/
 ```
+
+**Browser tests.** `e2e/e2e.js` drives the real page in Chromium: the landing page makes no third-party requests and loads its fonts; the sample result, filters, calendar and share card work; an `export.xml` and the same export zipped give identical results; a wrong, truncated, empty or non-Health file shows a plain message and the page recovers; the keyboard paths work; and [axe-core](https://github.com/dequelabs/axe-core) finds no accessibility violations on the landing page or the results. With `--stress` it also generates a 70 MB export and loads it as XML and as a zip, failing if it takes over 90 seconds, freezes the page for over 3 seconds or uses over 1 GB.
+
+```bash
+cd e2e
+npm ci
+npx playwright-core install chromium   # or set CHROMIUM_PATH to a Chromium you already have
+node e2e.js            # add --stress for the large-file run
+```
+
+All three run on every push and pull request (see `.github/workflows/test.yml`).
 
 ## Performance
 
@@ -152,14 +167,15 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `index.html` | The interface: hero animation, upload, results, share card |
 | `analyzer.js` | Streaming parser and the checks (browser and Node) |
 | `sample.js` | Synthetic export generator with known faults |
-| `test.js` | Engine test |
+| `test/` | Engine test and unit tests for every rule |
+| `e2e/` | Browser tests (Playwright and axe-core), with their own `package.json` |
 | `tools/make_big_export.py` | Generates 300 MB to 1 GB synthetic exports for stress testing |
 | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` | Icons |
 | `og.png` | Social preview image (1200×630), used for link previews |
 | `fonts/` | Instrument Serif and Inter Tight (WOFF2, Latin subset) with their SIL OFL licences |
 | `vendor/` | fflate, the unzip library, with its MIT licence |
 | `LICENSE` | MIT licence for the code |
-| `.github/workflows/test.yml` | Runs `node test.js` on every push and pull request |
+| `.github/workflows/test.yml` | Runs all three test layers on every push and pull request |
 | `docs/` | README screenshots, captured at 2× resolution |
 
 ## Licence

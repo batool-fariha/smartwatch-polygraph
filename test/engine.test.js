@@ -1,5 +1,5 @@
-const WT = require('./analyzer.js');
-const { generate } = require('./sample.js');
+const WT = require('../analyzer.js');
+const { generate } = require('../sample.js');
 const assert = require('assert');
 
 const { xml, truth } = generate({ days: 60, seed: 7 });
