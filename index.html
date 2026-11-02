@@ -275,6 +275,17 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .dd-f{margin:0;padding:0;list-style:none;font-size:14.5px}
 .dd-f li{padding:8px 0;border-top:1px solid var(--line)}
 .dd-none{font-size:14px;color:var(--muted);margin:0}
+.tag .src{color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;font-size:12.5px}
+.fixl{margin-top:14px;font-size:13.5px;line-height:1.45;color:var(--muted)}.rc .fixl b{display:inline;font:600 13.5px/1.45 var(--sans);letter-spacing:0;margin:0;color:var(--ink)}
+.srcs{padding:6px 26px 24px}
+.srow{padding:16px 0;border-bottom:1px solid var(--line)}
+.sr-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sr-h b{font:400 23px/1.1 var(--serif);letter-spacing:-.01em}
+.bd{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.bd-watch{background:#fff0d9;border-color:#f3d9ae;color:#7a4300}
+.sr-d{font-size:14px;color:var(--muted);margin-top:5px}
+.sr-b{height:4px;background:var(--h0);border-radius:9px;margin-top:10px;overflow:hidden}.sr-b i{display:block;height:100%;background:var(--orange);border-radius:9px}
+.ov{margin:20px 0 0;font-size:15.5px;line-height:1.55}.ov b{font-weight:600}.ov small{display:block;margin-top:6px;font-size:13.5px;color:var(--muted)}
 @media (max-width:560px){.hero{padding:28px 22px}.rwatch{width:170px}.rc>svg{display:none}.rc{padding:18px}}
 </style>
 </head>
@@ -484,6 +495,11 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
     <h2 class="rh">Score breakdown</h2>
     <div class="grid" id="cards"></div>
 
+    <div id="srcsec">
+      <h2 class="rh">Where your data comes from</h2>
+      <div class="panel srcs" id="srcs"></div>
+    </div>
+
     <h2 class="rh">What it found</h2>
     <div class="filters" id="filters"></div>
     <div id="receipts"></div>
@@ -686,7 +702,26 @@ function chartHTML(r) {
   return c.type === 'sleep' ? sleepChart(c) : c.type === 'blip' ? blipChart(c) : c.type === 'steps' ? stepsChart(c) : c.type === 'gaps' ? gapChart(c) : '';
 }
 function receiptCard(r, i) {
-  return `<div class="panel rc in" style="animation-delay:${Math.min(i, 8) * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div class="body"><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span>${chartHTML(r)}${r.day != null ? `<button type="button" class="lnk" data-day="${r.day}">See this day</button>` : ''}</div></div>`;
+  return `<div class="panel rc in" style="animation-delay:${Math.min(i, 8) * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div class="body"><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}${r.sources && r.sources.length ? `<span class="src"> · ${esc(r.sources.join(', '))}</span>` : ''}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span>${chartHTML(r)}${r.fix ? `<p class="fixl"><b>What to do.</b> ${esc(r.fix)}</p>` : ''}${r.day != null ? `<button type="button" class="lnk" data-day="${r.day}">See this day</button>` : ''}</div></div>`;
+}
+function renderSources(rep) {
+  const f = rep.facts, list = f.sources || [], o = f.stepOverlap || {}, box = $('#srcs');
+  $('#srcsec').style.display = list.length ? '' : 'none';
+  if (!list.length) return;
+  const total = list.reduce((a, s) => a + s.steps + s.hr + s.sleep, 0) || 1, pct = Math.round((o.share || 0) * 100);
+  const rows = list.map((s) => {
+    const parts = [];
+    const pl = (n, w) => `${num(n)} ${w}${n === 1 ? '' : 's'}`;
+    if (s.hr) parts.push(pl(s.hr, 'heart-rate reading'));
+    if (s.steps) parts.push(pl(s.steps, 'step record'));
+    if (s.sleep) parts.push(pl(s.sleep, 'sleep record'));
+    return `<div class="srow"><div class="sr-h"><b>${esc(s.name)}</b><span class="bd bd-${s.kind}">${{ watch: 'Watch', phone: 'Phone', other: 'Other' }[s.kind]}</span></div><div class="sr-d">${parts.join(' · ') || 'No records this tool uses'}</div><div class="sr-b"><i style="width:${((s.steps + s.hr + s.sleep) / total * 100).toFixed(1)}%"></i></div></div>`;
+  }).join('');
+  let story = '';
+  if (o.minutesBoth > 0 && o.keep && o.extraFrom) story = `<b>${esc(o.keep)}</b> and <b>${esc(o.extraFrom)}</b> both counted steps in ${pct}% of the minutes you were moving, which adds ${num(o.extra)} steps to the raw export. Summing from ${esc(o.keep)} alone gives the real total.<small>Apple's Health app already merges sources in its own totals. This matters for anything that reads the raw export.</small>`;
+  else if (o.minutesBoth > 0) story = `More than one source counted steps in ${pct}% of the minutes you were moving, which adds ${num(o.extra)} steps to the raw export.`;
+  else if (list.some((s) => s.steps)) story = 'Only one source counted steps, so nothing is double counted.';
+  box.innerHTML = rows + (story ? `<p class="ov">${story}</p>` : '');
 }
 function renderReceipts() {
   const rs = REPORT.receipts, counts = { all: rs.length };
@@ -745,7 +780,7 @@ function render(rep) {
   }).join('');
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.card .m i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
 
-  renderReceipts(); renderHeat();
+  renderSources(rep); renderReceipts(); renderHeat();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 

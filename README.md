@@ -30,7 +30,11 @@ Your own watch is the result: each ring is as long as its sub-score, and the num
 
 ![The result: a watch whose four rings show the sleep, steps, heart-rate and coverage scores](docs/results.jpg)
 
-**Findings** are dated and come with a chart drawn from your own readings: the night's heart rate against its sleeping ceiling, the single reading and the minutes around it, or the raw step total against what you actually walked. Filter them by sleep, steps, heart rate or coverage.
+**Where your data comes from** lists every source in the export (watch, phone or other) with its record counts. When two sources counted the same steps it says which ones, how much they added to the raw export, and which one to sum from.
+
+![The sources in an export, with how much the phone and watch overlap on steps](docs/sources.jpg)
+
+**Findings** name the source or sources behind them, say what to do about it, and come with a chart drawn from your own readings: the night's heart rate against its sleeping ceiling, the single reading and the minutes around it, or the raw step total against what you actually walked. Each one ends with a plain "What to do" line. Filter them by sleep, steps, heart rate or coverage.
 
 ![Findings with charts and category filters](docs/findings.jpg)
 
@@ -106,7 +110,7 @@ To get an export: Health app → your profile picture → **Export All Health Da
 
 ## Test
 
-`sample.js` generates a synthetic export with known faults planted in it: a night spent dancing, a night logged by two sources, a watch left on a desk, heart-rate glitches, a dead day. `test.js` checks that each one is found, and that the parser copes with records split across chunk boundaries.
+`sample.js` generates a synthetic export with known faults planted in it: a night spent dancing, a night logged by two sources, a watch left on a desk, heart-rate glitches, a dead day. `test.js` checks that each one is found, that the right source is named for each (the phone for the extra steps, the watch for the glitches), that a single-source export claims no overlap, and that the parser copes with records split across chunk boundaries.
 
 ```bash
 node test.js

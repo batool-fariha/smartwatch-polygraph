@@ -36,6 +36,8 @@
   const fmtDay = (di) => new Date(di * 86400000).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
   const hhmm = (min) => new Date(min * 60000).toISOString().slice(11, 16);
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  const joinNames = (a) => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+  const KIND = ['watch', 'phone', 'other'];
 
   /* ---------- streaming XML parser ---------- */
   function createParser(analyzer) {
@@ -66,7 +68,16 @@
   /* ---------- analyzer ---------- */
   function createAnalyzer() {
     const steps = new Map(); // day index -> Float32Array(3 * 1440): watch, phone, other per minute
-    const hrRaw = { t: [], v: [], c: [] };
+    const hrRaw = { t: [], v: [], c: [], n: [] };
+    const names = [], nameIdx = new Map(), srcCls = [], srcStat = [];   // one entry per sourceName
+    function srcId(name, c) {
+      let i = nameIdx.get(name);
+      if (i === undefined) {
+        i = Math.min(names.length, 65534); nameIdx.set(name, i);
+        if (i === names.length) { names.push(name); srcCls.push(c); srcStat.push({ steps: 0, hr: 0, sleep: 0 }); }
+      }
+      return i;
+    }
     const sleepRaw = [];
     const workoutRaw = [];
     const counts = { steps: 0, hr: 0, sleep: 0, workouts: 0 };
@@ -81,20 +92,20 @@
     function addRecord(a) {
       if (!a.startDate || !a.endDate) return;
       const t = a.type, s = parseTime(a.startDate);
-      const c = srcClass(a.sourceName || '');
+      const nm = a.sourceName || 'Unknown source', c = srcClass(nm), sid = srcId(nm, c);
       if (t === T_STEPS) {
         const v = +a.value; if (!(v >= 0)) return;
         const e = Math.max(s + 1, parseTime(a.endDate)), dur = e - s;
-        counts.steps++;
+        counts.steps++; srcStat[sid].steps++;
         if (dur <= 30) { const per = v / dur; for (let m = s; m < e; m++) addStep(m, c, per); }
         else addStep(s, c, v);
       } else if (t === T_HR) {
         const v = +a.value; if (!isFinite(v)) return;
-        hrRaw.t.push(s); hrRaw.v.push(v); hrRaw.c.push(c); counts.hr++;
+        hrRaw.t.push(s); hrRaw.v.push(v); hrRaw.c.push(c); hrRaw.n.push(sid); srcStat[sid].hr++; counts.hr++;
       } else if (t === T_SLEEP) {
         const val = a.value || '';
         const k = /InBed/.test(val) ? 0 : /Awake/.test(val) ? 2 : 1; // 0 in bed, 1 asleep, 2 awake
-        sleepRaw.push({ s, e: parseTime(a.endDate), k, c }); counts.sleep++;
+        sleepRaw.push({ s, e: parseTime(a.endDate), k, c, n: sid }); srcStat[sid].sleep++; counts.sleep++;
       }
     }
     function addWorkout(a) {
@@ -106,8 +117,8 @@
       /* sort heart rate */
       const n = hrRaw.t.length;
       const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => hrRaw.t[a] - hrRaw.t[b]);
-      const ht = new Float64Array(n), hv = new Float32Array(n), hc = new Uint8Array(n);
-      for (let i = 0; i < n; i++) { const j = order[i]; ht[i] = hrRaw.t[j]; hv[i] = hrRaw.v[j]; hc[i] = hrRaw.c[j]; }
+      const ht = new Float64Array(n), hv = new Float32Array(n), hc = new Uint8Array(n), hn = new Uint16Array(n);
+      for (let i = 0; i < n; i++) { const j = order[i]; ht[i] = hrRaw.t[j]; hv[i] = hrRaw.v[j]; hc[i] = hrRaw.c[j]; hn[i] = hrRaw.n[j]; }
 
       /* time range */
       let minAll = Infinity, maxAll = -Infinity;
@@ -133,12 +144,12 @@
       const blipEv = [], impEv = [];
       for (let i = 0; i < n; i++) {
         const v = hv[i];
-        if (v < 30 || v > 230) { impossible++; dayBad[dayOf(ht[i])]++; impEv.push({ m: ht[i], v }); }
+        if (v < 30 || v > 230) { impossible++; dayBad[dayOf(ht[i])]++; impEv.push({ m: ht[i], v, sid: hn[i] }); }
         if (i > 0 && i < n - 1) {
           const p = hv[i - 1], nx = hv[i + 1];
           if (ht[i + 1] - ht[i - 1] <= 10 && Math.abs(v - p) >= 60 && Math.abs(v - nx) >= 60 && Math.abs(p - nx) <= 25 &&
               v >= 30 && v <= 230 && !inW(ht[i])) {
-            blips++; dayBad[dayOf(ht[i])]++; blipEv.push({ m: ht[i], v, p, nx });
+            blips++; dayBad[dayOf(ht[i])]++; blipEv.push({ m: ht[i], v, p, nx, sid: hn[i] });
           }
         }
       }
@@ -147,14 +158,16 @@
       blipEv.sort((a, b) => Math.abs(b.v - (b.p + b.nx) / 2) - Math.abs(a.v - (a.p + a.nx) / 2));
       for (const b of blipEv.slice(0, 2)) receipts.push({
         kind: 'hr', severity: 62, date: fmtDay(Math.floor(b.m / DAY)), day: Math.floor(b.m / DAY), chart: { type: 'blip', at: b.m, v: Math.round(b.v), pts: around(b.m, 20) },
+        sources: [names[b.sid]], fix: 'Check how snugly the band sits. Readings like this are usually a loose strap, and they are safe to filter out.',
         title: `Heart rate "jumped" to ${Math.round(b.v)} bpm for a single reading`,
-        detail: `At ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))} it read ${Math.round(b.p)}, then ${Math.round(b.v)}, then ${Math.round(b.nx)} bpm within minutes, outside any workout. A physiological spike doesn't reverse itself that fast; this is a sensor glitch (usually a loose strap).`
+        detail: `${names[b.sid]} recorded ${Math.round(b.p)}, then ${Math.round(b.v)}, then ${Math.round(b.nx)} bpm within minutes at ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))}, outside any workout. A physiological spike doesn't reverse itself that fast; this is a sensor glitch.`
       });
       impEv.sort((a, b) => Math.abs(b.v - 130) - Math.abs(a.v - 130));
       for (const b of impEv.slice(0, 2)) receipts.push({
         kind: 'hr', severity: 72, date: fmtDay(Math.floor(b.m / DAY)), day: Math.floor(b.m / DAY), chart: { type: 'blip', at: b.m, v: Math.round(b.v), pts: around(b.m, 20) },
+        sources: [names[b.sid]], fix: 'Check how snugly the band sits, and filter readings outside 30–230 bpm before averaging.',
         title: `An impossible heart rate: ${Math.round(b.v)} bpm`,
-        detail: `Recorded at ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))}. Outside 30–230 bpm isn't a plausible human reading; it's stored in your export all the same.`
+        detail: `${names[b.sid]} recorded this at ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))}. Outside 30–230 bpm isn't a plausible human reading; it's stored in your export all the same.`
       });
 
       /* ===== sleep vs. body ===== */
@@ -162,14 +175,14 @@
       const blocks = [];
       for (const iv of asl) {
         const b = blocks[blocks.length - 1];
-        if (b && iv.s <= b.e) { b.e = Math.max(b.e, iv.e); b.raw += iv.e - iv.s; b.cls |= 1 << iv.c; }
-        else blocks.push({ s: iv.s, e: iv.e, raw: iv.e - iv.s, cls: 1 << iv.c });
+        if (b && iv.s <= b.e) { b.e = Math.max(b.e, iv.e); b.raw += iv.e - iv.s; b.cls |= 1 << iv.c; b.srcs.add(iv.n); }
+        else blocks.push({ s: iv.s, e: iv.e, raw: iv.e - iv.s, cls: 1 << iv.c, srcs: new Set([iv.n]) });
       }
       const sessions = [];
       for (const b of blocks) {
         const cur = sessions[sessions.length - 1];
-        if (cur && b.s - cur.e <= 90) { cur.e = b.e; cur.blocks.push(b); cur.asleepMin += b.e - b.s; cur.raw += b.raw; cur.cls |= b.cls; }
-        else sessions.push({ s: b.s, e: b.e, blocks: [b], asleepMin: b.e - b.s, raw: b.raw, cls: b.cls });
+        if (cur && b.s - cur.e <= 90) { cur.e = b.e; cur.blocks.push(b); cur.asleepMin += b.e - b.s; cur.raw += b.raw; cur.cls |= b.cls; b.srcs.forEach((x) => cur.srcs.add(x)); }
+        else sessions.push({ s: b.s, e: b.e, blocks: [b], asleepMin: b.e - b.s, raw: b.raw, cls: b.cls, srcs: new Set(b.srcs) });
       }
       const scored = sessions.filter((x) => x.asleepMin >= 90);
 
@@ -213,36 +226,42 @@
           flaggedNights++;
           const main = pens.slice().sort((a, b) => b.pen - a.pen)[0].key;
           const dur = fmtDur(ss.asleepMin), day = fmtDay(wakeDi + firstDay);
-          let title, detail;
+          const sn = [...ss.srcs].map((i) => names[i]), watchN = [...ss.srcs].filter((i) => srcCls[i] === W).map((i) => names[i]);
+          let title, detail, fix;
           if (main === 'conflict') {
             const bits = [];
             if (hrElev) bits.push(`${hrElev} heart-rate readings at ${Math.round(thr)}+ bpm (peak ${Math.round(hrPeak)})`);
             if (walk.size) bits.push(`${walk.size} minutes of walking-pace movement (${Math.round(walkSteps)} steps)`);
             title = `Logged ${dur} of sleep on ${day}, but your body was up`;
-            detail = `Your own data inside that sleep window contains ${bits.join(' and ')}. Your normal sleeping heart rate is about ${Math.round(medSleepHr || 0)} bpm. The watch decided "still wrist = asleep" and ignored the rest of its sensors.`;
+            detail = `Your own data inside that sleep window contains ${bits.join(' and ')}. Your normal sleeping heart rate is about ${Math.round(medSleepHr || 0)} bpm. ${watchN.length ? joinNames(watchN) : 'The device'} decided "still wrist = asleep" and ignored the rest of its sensors.`;
+            fix = 'Treat this night as unreliable. Sleep detection that leans on a still wrist can log time awake as sleep.';
           } else if (main === 'long') {
             title = `${dur} of "sleep" on ${day}: the watch was probably on a table`;
-            detail = `That's longer than almost anyone sleeps, and the window holds only ${hrN} heart-rate readings. A still wrist with little pulse data gets logged as sleep.`;
+            detail = `${joinNames(sn)} logged this. That's longer than almost anyone sleeps, and the window holds only ${hrN} heart-rate readings. A still wrist with little pulse data gets logged as sleep.`;
+            fix = 'Wear the watch to bed, or ignore sleep sessions that have almost no heart-rate readings.';
           } else if (main === 'dup') {
             title = `Slept ${dur} on ${day}, or ${fmtDur(ss.raw)} if you add up the export`;
-            detail = `Two sources (e.g. phone and watch) both logged the same night as asleep. Anyone summing the raw export counts it twice.`;
+            detail = `${sn.length > 1 ? joinNames(sn) + ' both' : 'Two overlapping records from ' + (sn[0] || 'one source')} logged the same night as asleep. Anyone summing the raw export counts it twice.`;
+            fix = `Keep sleep tracking on one device or app${watchN.length ? ', ideally ' + watchN[0] : ''}, and sum sleep from a single source.`;
           } else {
             title = `${dur} of sleep on ${day} without any heart-rate data`;
-            detail = `A watch logged the sleep, but only ${hrN} pulse readings exist in that window. Nothing corroborates it.`;
+            detail = `${watchN.length ? joinNames(watchN) : 'A watch'} logged the sleep, but only ${hrN} pulse readings exist in that window. Nothing corroborates it.`;
+            fix = 'Check the watch was worn and its heart-rate sensor was on overnight.';
           }
           const pts = [];
           for (let i = lowerBound(ht, ss.s); i < n && ht[i] < ss.e; i++) pts.push([ht[i], Math.round(hv[i])]);
           const stp = Math.max(1, Math.ceil(pts.length / 160));
           const chart = { type: 'sleep', s: ss.s, e: ss.e, thr: Math.round(thr), peak: Math.round(hrPeak),
             pts: pts.filter((p, i) => i % stp === 0 || p[1] >= thr), blocks: ss.blocks.map((b) => [b.s, b.e]) };
-          receipts.push({ kind: 'sleep', severity: Math.round((1 - trust) * 100), date: day, day: wakeDi + firstDay, title, detail, chart });
+          receipts.push({ kind: 'sleep', severity: Math.round((1 - trust) * 100), date: day, day: wakeDi + firstDay, title, detail, fix, sources: sn, chart });
         }
       }
       const sleepScore = sleepDen ? (sleepNum / sleepDen) * 100 : null;
 
       /* ===== steps: double counting ===== */
       const dayRaw = new Float64Array(nDays), dayDedup = new Float64Array(nDays);
-      let rawTot = 0, dedupTot = 0, implaus = 0;
+      let rawTot = 0, dedupTot = 0, implaus = 0, minAny = 0, minBoth = 0;
+      const extraBy = [0, 0, 0], keptBy = [0, 0, 0];
       for (const [day, a] of steps) {
         const di = day - firstDay;
         for (let i = 0; i < DAY; i++) {
@@ -251,8 +270,19 @@
           const mx = Math.max(w, p, o);
           dayRaw[di] += raw; dayDedup[di] += mx; rawTot += raw; dedupTot += mx;
           if (mx > 250) implaus++;
+          minAny++;
+          if ((w > 0) + (p > 0) + (o > 0) >= 2) {
+            minBoth++;
+            const mi = w >= p && w >= o ? 0 : p >= o ? 1 : 2;
+            keptBy[mi] += mx;
+            if (mi !== 0) extraBy[0] += w; if (mi !== 1) extraBy[1] += p; if (mi !== 2) extraBy[2] += o;
+          }
         }
       }
+      const classTop = (c, key) => { let best = -1; names.forEach((nm, i) => { if (srcCls[i] === c && srcStat[i][key] > 0 && (best < 0 || srcStat[i][key] > srcStat[best][key])) best = i; }); return best < 0 ? null : names[best]; };
+      const argmax = (a) => (a[0] >= a[1] && a[0] >= a[2] ? 0 : a[1] >= a[2] ? 1 : 2);
+      const keepC = argmax(keptBy), extraC = argmax(extraBy);
+      const keepName = minBoth ? classTop(keepC, 'steps') : null, extraName = minBoth && extraC !== keepC ? classTop(extraC, 'steps') : null;
       const infl = dedupTot ? rawTot / dedupTot - 1 : 0;
       const stepsScore = dedupTot ? clamp(100 * (1 - Math.min(1, infl * 1.5)) - Math.min(20, implaus / 10), 0, 100) : null;
       const stepPenByDay = new Map();
@@ -268,7 +298,9 @@
       for (const d of stepDays.slice(0, 3)) receipts.push({
         kind: 'steps', severity: Math.round(Math.min(100, d.f * 100)), date: fmtDay(d.di + firstDay), day: d.di + firstDay, chart: { type: 'steps', raw: Math.round(d.raw), dedup: Math.round(d.dedup) },
         title: `${Math.round(d.raw).toLocaleString('en-US')} steps on ${fmtDay(d.di + firstDay)}, but you only moved ${Math.round(d.dedup).toLocaleString('en-US')}`,
-        detail: `Phone and watch both recorded the same walking, so the raw export overstates the day by ${Math.round(d.f * 100)}%. Apple's own Health app de-duplicates this, but anyone analysing the raw export (apps, researchers, clinical pipelines) doesn't.`
+        sources: [keepName, extraName].filter(Boolean),
+        fix: `Sum steps from ${keepName || 'one source'} only. Apple's Health app already merges sources in its own totals, but tools that read the raw export don't.`,
+        detail: `${keepName && extraName ? keepName + ' and ' + extraName : 'Phone and watch'} both recorded the same walking, so the raw export overstates the day by ${Math.round(d.f * 100)}%.${extraName ? ' Most of the extra steps came from ' + extraName + '.' : ''}`
       });
 
       /* ===== coverage / gaps ===== */
@@ -279,6 +311,8 @@
       let fh = hours.indexOf(1), lh = hours.lastIndexOf(1);
       let coverageScore = null, recurring = null, darkRuns = [], hoursLost = 0, coverageDays = 0, avgHours = 0;
       const covByDay = new Map();
+      const topHr = names.length ? names.reduce((best, _, i) => (srcStat[i].hr > srcStat[best].hr ? i : best), 0) : -1;
+      const watchName = classTop(W, 'hr') || (topHr >= 0 && srcStat[topHr].hr > 0 ? names[topHr] : null);
       if (fh >= 0) {
         const d0 = Math.floor(fh / 24), d1 = Math.floor(lh / 24);
         let sum = 0;
@@ -307,12 +341,15 @@
         if (recurring) receipts.push({
           kind: 'coverage', severity: 45, date: '', day: null, chart: { type: 'gaps', hour: recurring.hour },
           title: `Your watch goes dark around ${String(recurring.hour).padStart(2, '0')}:00 on ${recurring.days} of ${recurring.of} days`,
-          detail: `That's the charging window. It silently removes about ${(hoursLost / coverageDays).toFixed(1)} h/day from your record, and anything computed per-day (average heart rate, active time) is computed over a different slice of the day each time.`
+          sources: watchName ? [watchName] : [],
+          fix: 'Charging at a time you are not wearing it for sleep or a workout keeps those periods covered.',
+          detail: `${watchName ? watchName + ' stops recording here. ' : ''}That's the charging window. It silently removes about ${(hoursLost / coverageDays).toFixed(1)} h/day from your record, and anything computed per-day (average heart rate, active time) is computed over a different slice of the day each time.`
         });
         darkRuns.sort((a, b) => b.len - a.len);
         for (const r of darkRuns.slice(0, 1)) receipts.push({
           kind: 'coverage', severity: 55, date: fmtDay(r.from + firstDay), day: r.from + firstDay,
           title: `${r.len} day${r.len > 1 ? 's' : ''} of nothing starting ${fmtDay(r.from + firstDay)}`,
+          fix: 'Check whether the watch ran out of battery or was left off that day.',
           detail: `No heart-rate data at all. In a daily summary these days look like "0", not "missing", unless the reader knows to check.`
         });
       }
@@ -352,7 +389,10 @@
           rawSteps: Math.round(rawTot), dedupSteps: Math.round(dedupTot), inflation: infl, implausibleStepMinutes: implaus,
           hrSamples: n, hrImpossible: impossible, hrBlips: blips,
           coverageDays, avgHoursWithData: avgHours, hoursLostToShortGaps: hoursLost, recurringGap: recurring,
-          darkDays: darkRuns.reduce((a, r) => a + r.len, 0), longestDark: darkRuns[0] ? darkRuns[0].len : 0
+          darkDays: darkRuns.reduce((a, r) => a + r.len, 0), longestDark: darkRuns[0] ? darkRuns[0].len : 0,
+          sources: names.map((nm, i) => ({ name: nm, kind: KIND[srcCls[i]], steps: srcStat[i].steps, hr: srcStat[i].hr, sleep: srcStat[i].sleep }))
+            .sort((a, b) => (b.steps + b.hr + b.sleep) - (a.steps + a.hr + a.sleep)).slice(0, 8),
+          stepOverlap: { minutesAny: minAny, minutesBoth: minBoth, share: minAny ? minBoth / minAny : 0, extra: Math.round(rawTot - dedupTot), keep: keepName, extraFrom: extraName }
         },
         receipts: top, daily
       };
