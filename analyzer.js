@@ -12,9 +12,19 @@
   const T_HR = 'HKQuantityTypeIdentifierHeartRate';
   const T_SLEEP = 'HKCategoryTypeIdentifierSleepAnalysis';
 
-  // Timestamps are read as wall-clock time ("2024-05-01 23:10:00 +0200" -> 23:10), in minutes.
+  // A timestamp ("2024-05-01 23:10:00 +0200") is local wall-clock time plus the UTC offset in force at that moment.
+  // parseTime returns absolute minutes (UTC) so durations and overlaps stay right across daylight saving and travel,
+  // and leaves the offset it read in lastOff so the analyzer can map absolute time back to the wearer's local clock.
+  let lastOff = 0;
   function parseTime(s) {
-    return Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16)) / 60000;
+    const wall = Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10), +s.slice(11, 13), +s.slice(14, 16)) / 60000;
+    let off = 0;
+    if (s.length >= 25) {
+      const sign = s.charCodeAt(20);
+      if (sign === 43 || sign === 45) { off = +s.slice(21, 23) * 60 + +s.slice(23, 25); if (off !== off) off = 0; else if (sign === 45) off = -off; }
+    }
+    lastOff = off;
+    return wall - off;
   }
   function srcClass(name) {
     const n = name.toLowerCase();
@@ -81,6 +91,11 @@
     const sleepRaw = [];
     const workoutRaw = [];
     const counts = { steps: 0, hr: 0, sleep: 0, workouts: 0 };
+    const offObs = new Map(); let lastBucket = NaN, lastObsOff = NaN;   // 15-minute bucket -> UTC offset seen there
+    function noteOff(t, off) {
+      const b = Math.floor(t / 15);
+      if (b !== lastBucket || off !== lastObsOff) { offObs.set(b, off); lastBucket = b; lastObsOff = off; }
+    }
 
     function addStep(m, c, v) {
       const di = Math.floor(m / DAY);
@@ -91,11 +106,11 @@
 
     function addRecord(a) {
       if (!a.startDate || !a.endDate) return;
-      const t = a.type, s = parseTime(a.startDate);
+      const t = a.type, s = parseTime(a.startDate); noteOff(s, lastOff);
       const nm = a.sourceName || 'Unknown source', c = srcClass(nm), sid = srcId(nm, c);
       if (t === T_STEPS) {
         const v = +a.value; if (!(v >= 0)) return;
-        const e = Math.max(s + 1, parseTime(a.endDate)), dur = e - s;
+        const e = Math.max(s + 1, parseTime(a.endDate)), dur = e - s; noteOff(e, lastOff);
         counts.steps++; srcStat[sid].steps++;
         if (dur <= 30) { const per = v / dur; for (let m = s; m < e; m++) addStep(m, c, per); }
         else addStep(s, c, v);
@@ -105,12 +120,14 @@
       } else if (t === T_SLEEP) {
         const val = a.value || '';
         const k = /InBed/.test(val) ? 0 : /Awake/.test(val) ? 2 : 1; // 0 in bed, 1 asleep, 2 awake
-        sleepRaw.push({ s, e: parseTime(a.endDate), k, c, n: sid }); srcStat[sid].sleep++; counts.sleep++;
+        const e = parseTime(a.endDate); noteOff(e, lastOff);
+        sleepRaw.push({ s, e, k, c, n: sid }); srcStat[sid].sleep++; counts.sleep++;
       }
     }
     function addWorkout(a) {
       if (!a.startDate || !a.endDate) return;
-      workoutRaw.push([parseTime(a.startDate), parseTime(a.endDate)]); counts.workouts++;
+      const s = parseTime(a.startDate); noteOff(s, lastOff);
+      workoutRaw.push([s, parseTime(a.endDate)]); counts.workouts++;
     }
 
     function finish() {
@@ -123,19 +140,34 @@
       /* time range */
       let minAll = Infinity, maxAll = -Infinity;
       if (n) { minAll = ht[0]; maxAll = ht[n - 1]; }
-      for (const di of steps.keys()) { if (di * DAY < minAll) minAll = di * DAY; if (di * DAY + DAY - 1 > maxAll) maxAll = di * DAY + DAY - 1; }
+      for (const [uday, a] of steps) {
+        let f = -1, l = -1;
+        for (let i = 0; i < DAY; i++) if (a[i] || a[DAY + i] || a[2 * DAY + i]) { if (f < 0) f = i; l = i; }
+        if (f >= 0) { if (uday * DAY + f < minAll) minAll = uday * DAY + f; if (uday * DAY + l > maxAll) maxAll = uday * DAY + l; }
+      }
       for (const x of sleepRaw) { if (x.s < minAll) minAll = x.s; if (x.e > maxAll) maxAll = x.e; }
       if (!isFinite(minAll)) return { empty: true, counts };
-      const firstDay = Math.floor(minAll / DAY), lastDay = Math.floor(maxAll / DAY), nDays = lastDay - firstDay + 1;
-      const base = firstDay * DAY;
+      /* the wearer's UTC offset over time, from the offsets the records carry (piecewise constant) */
+      const segs = [];
+      for (const b of [...offObs.keys()].sort((x, y) => x - y)) { const o = offObs.get(b); if (!segs.length || segs[segs.length - 1].off !== o) segs.push({ from: b * 15, off: o }); }
+      const offsetAt = (m) => {
+        if (!segs.length || m < segs[0].from) return segs.length ? segs[0].off : 0;
+        let lo = 0, hi = segs.length - 1;
+        while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (segs[mid].from <= m) lo = mid; else hi = mid - 1; }
+        return segs[lo].off;
+      };
+      const localMin = (m) => m + offsetAt(m);                       // minutes on the wearer's wall clock
+      const ldayAbs = (m) => Math.floor(localMin(m) / DAY);          // local calendar day
+      const firstDay = ldayAbs(minAll), lastDay = ldayAbs(maxAll), nDays = lastDay - firstDay + 1;
 
-      const wFlag = new Uint8Array(nDays * DAY + 1);
-      for (const [s, e] of workoutRaw) for (let m = Math.max(base, Math.floor(s) - 10); m <= Math.min(base + nDays * DAY, e + 10); m++) wFlag[m - base] = 1;
-      const inW = (m) => wFlag[m - base] === 1;
+      const ubase = Math.floor(minAll) - 15, usize = Math.ceil(maxAll) - ubase + 31;   // workout flags live on the absolute axis
+      const wFlag = new Uint8Array(usize);
+      for (const [s, e] of workoutRaw) for (let m = Math.max(ubase, Math.floor(s) - 10); m <= Math.min(ubase + usize - 1, e + 10); m++) wFlag[m - ubase] = 1;
+      const inW = (m) => { const k = m - ubase; return k >= 0 && k < usize && wFlag[k] === 1; };
       const stepsAt = (m) => { const di = Math.floor(m / DAY), a = steps.get(di); if (!a) return 0; const i = m - di * DAY; return Math.max(a[i], a[DAY + i], a[2 * DAY + i]); };
 
       const receipts = [];
-      const dayOf = (m) => Math.floor(m / DAY) - firstDay;
+      const dayOf = (m) => Math.min(nDays - 1, Math.max(0, ldayAbs(m) - firstDay));
       const around = (m, w) => { const out = []; for (let i = lowerBound(ht, m - w); i < n && ht[i] <= m + w; i++) out.push([ht[i], Math.round(hv[i])]); return out; };
 
       /* ===== heart rate plausibility ===== */
@@ -157,17 +189,17 @@
       const hrScore = n >= 100 ? clamp(100 - (hrBad / n) * 4000, 0, 100) : null;
       blipEv.sort((a, b) => Math.abs(b.v - (b.p + b.nx) / 2) - Math.abs(a.v - (a.p + a.nx) / 2));
       for (const b of blipEv.slice(0, 2)) receipts.push({
-        kind: 'hr', severity: 62, date: fmtDay(Math.floor(b.m / DAY)), day: Math.floor(b.m / DAY), chart: { type: 'blip', at: b.m, v: Math.round(b.v), pts: around(b.m, 20) },
+        kind: 'hr', severity: 62, date: fmtDay(ldayAbs(b.m)), day: ldayAbs(b.m), chart: { type: 'blip', at: b.m, off: offsetAt(b.m), v: Math.round(b.v), pts: around(b.m, 20) },
         sources: [names[b.sid]], fix: 'Check how snugly the band sits. Readings like this are usually a loose strap, and they are safe to filter out.',
         title: `Heart rate "jumped" to ${Math.round(b.v)} bpm for a single reading`,
-        detail: `${names[b.sid]} recorded ${Math.round(b.p)}, then ${Math.round(b.v)}, then ${Math.round(b.nx)} bpm within minutes at ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))}, outside any workout. A physiological spike doesn't reverse itself that fast; this is a sensor glitch.`
+        detail: `${names[b.sid]} recorded ${Math.round(b.p)}, then ${Math.round(b.v)}, then ${Math.round(b.nx)} bpm within minutes at ${hhmm(localMin(b.m))} on ${fmtDay(ldayAbs(b.m))}, outside any workout. A physiological spike doesn't reverse itself that fast; this is a sensor glitch.`
       });
       impEv.sort((a, b) => Math.abs(b.v - 130) - Math.abs(a.v - 130));
       for (const b of impEv.slice(0, 2)) receipts.push({
-        kind: 'hr', severity: 72, date: fmtDay(Math.floor(b.m / DAY)), day: Math.floor(b.m / DAY), chart: { type: 'blip', at: b.m, v: Math.round(b.v), pts: around(b.m, 20) },
+        kind: 'hr', severity: 72, date: fmtDay(ldayAbs(b.m)), day: ldayAbs(b.m), chart: { type: 'blip', at: b.m, off: offsetAt(b.m), v: Math.round(b.v), pts: around(b.m, 20) },
         sources: [names[b.sid]], fix: 'Check how snugly the band sits, and filter readings outside 30–230 bpm before averaging.',
         title: `An impossible heart rate: ${Math.round(b.v)} bpm`,
-        detail: `${names[b.sid]} recorded this at ${hhmm(b.m)} on ${fmtDay(Math.floor(b.m / DAY))}. Outside 30–230 bpm isn't a plausible human reading; it's stored in your export all the same.`
+        detail: `${names[b.sid]} recorded this at ${hhmm(localMin(b.m))} on ${fmtDay(ldayAbs(b.m))}. Outside 30–230 bpm isn't a plausible human reading; it's stored in your export all the same.`
       });
 
       /* ===== sleep vs. body ===== */
@@ -218,7 +250,7 @@
         if ((ss.cls & 1) && hrN < Math.max(1, ss.asleepMin / 120)) pens.push({ key: 'noev', pen: 0.2 });
         const trust = clamp(1 - pens.reduce((a, p) => a + p.pen, 0), 0, 1);
         sleepNum += trust * ss.asleepMin; sleepDen += ss.asleepMin;
-        const wakeDi = Math.floor(ss.e / DAY) - firstDay;
+        const wakeDi = dayOf(ss.e);
         sleepPenByDay.set(wakeDi, Math.max(sleepPenByDay.get(wakeDi) || 0, 1 - trust));
         const prevInfo = sleepInfoByDay.get(wakeDi);
         if (!prevInfo || ss.asleepMin > prevInfo.asleepMin) sleepInfoByDay.set(wakeDi, { trust, asleepMin: ss.asleepMin });
@@ -251,7 +283,7 @@
           const pts = [];
           for (let i = lowerBound(ht, ss.s); i < n && ht[i] < ss.e; i++) pts.push([ht[i], Math.round(hv[i])]);
           const stp = Math.max(1, Math.ceil(pts.length / 160));
-          const chart = { type: 'sleep', s: ss.s, e: ss.e, thr: Math.round(thr), peak: Math.round(hrPeak),
+          const chart = { type: 'sleep', s: ss.s, e: ss.e, offS: offsetAt(ss.s), offE: offsetAt(ss.e), thr: Math.round(thr), peak: Math.round(hrPeak),
             pts: pts.filter((p, i) => i % stp === 0 || p[1] >= thr), blocks: ss.blocks.map((b) => [b.s, b.e]) };
           receipts.push({ kind: 'sleep', severity: Math.round((1 - trust) * 100), date: day, day: wakeDi + firstDay, title, detail, fix, sources: sn, chart });
         }
@@ -262,12 +294,11 @@
       const dayRaw = new Float64Array(nDays), dayDedup = new Float64Array(nDays);
       let rawTot = 0, dedupTot = 0, implaus = 0, minAny = 0, minBoth = 0;
       const extraBy = [0, 0, 0], keptBy = [0, 0, 0];
-      for (const [day, a] of steps) {
-        const di = day - firstDay;
+      for (const [uday, a] of steps) {
         for (let i = 0; i < DAY; i++) {
           const w = a[i], p = a[DAY + i], o = a[2 * DAY + i], raw = w + p + o;
           if (raw === 0) continue;
-          const mx = Math.max(w, p, o);
+          const di = dayOf(uday * DAY + i), mx = Math.max(w, p, o);
           dayRaw[di] += raw; dayDedup[di] += mx; rawTot += raw; dedupTot += mx;
           if (mx > 250) implaus++;
           minAny++;
@@ -306,8 +337,16 @@
       /* ===== coverage / gaps ===== */
       const useHr = n >= 100;
       const hours = new Uint8Array(nDays * 24);
-      if (useHr) for (let i = 0; i < n; i++) hours[Math.floor(ht[i] / 60) - firstDay * 24] = 1;
-      else for (const [day, a] of steps) for (let i = 0; i < DAY; i++) if (a[i] + a[DAY + i] + a[2 * DAY + i] > 0) hours[Math.floor((day * DAY + i) / 60) - firstDay * 24] = 1;
+      const hidx = (m) => Math.min(nDays * 24 - 1, Math.max(0, Math.floor(localMin(m) / 60) - firstDay * 24));
+      if (useHr) for (let i = 0; i < n; i++) hours[hidx(ht[i])] = 1;
+      else for (const [uday, a] of steps) for (let i = 0; i < DAY; i++) if (a[i] + a[DAY + i] + a[2 * DAY + i] > 0) hours[hidx(uday * DAY + i)] = 1;
+      // when the clock jumps forward (daylight saving, or flying east) some local hours never happen; they are not gaps in the data
+      for (let k = 1; k < segs.length; k++) {
+        if (segs[k].off <= segs[k - 1].off) continue;
+        for (let h = Math.ceil((segs[k].from + segs[k - 1].off) / 60); h <= Math.floor((segs[k].from + segs[k].off) / 60) - 1; h++) {
+          const idx = h - firstDay * 24; if (idx >= 0 && idx < hours.length) hours[idx] = 1;
+        }
+      }
       let fh = hours.indexOf(1), lh = hours.lastIndexOf(1);
       let coverageScore = null, recurring = null, darkRuns = [], hoursLost = 0, coverageDays = 0, avgHours = 0;
       const covByDay = new Map();

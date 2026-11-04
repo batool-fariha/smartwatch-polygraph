@@ -7,8 +7,10 @@ import random, zipfile, sys, os, datetime
 out=sys.argv[1]; days=int(sys.argv[2]); random.seed(11)
 W="Sam’s Apple Watch"; P="Sam’s iPhone"
 start=datetime.date(2023,11,1)
-def ts(d,m): 
-    t=datetime.datetime.combine(d,datetime.time())+datetime.timedelta(minutes=m); return t.strftime('%Y-%m-%d %H:%M:%S +0000')
+def ts(d,m):
+    # US Eastern style offsets (month-based approximation of daylight saving), so the file carries changing offsets
+    t=datetime.datetime.combine(d,datetime.time())+datetime.timedelta(minutes=m)
+    return t.strftime('%Y-%m-%d %H:%M:%S ') + ('-0400' if 4 <= t.month <= 10 else '-0500')
 def rec(t,src,s,e,v,u=''):
     return f'<Record type="{t}" sourceName="{src}" sourceVersion="11.0" {("unit=%s " % chr(34)+u+chr(34)) if u else ""}creationDate="{e}" startDate="{s}" endDate="{e}" value="{v}"><MetadataEntry key="HKMetadataKeySyncIdentifier" value="{random.getrandbits(64):x}"/></Record>\n'
 OTHER=['HKQuantityTypeIdentifierActiveEnergyBurned','HKQuantityTypeIdentifierBasalEnergyBurned','HKQuantityTypeIdentifierDistanceWalkingRunning','HKQuantityTypeIdentifierFlightsClimbed','HKQuantityTypeIdentifierAppleExerciseTime','HKQuantityTypeIdentifierWalkingSpeed']

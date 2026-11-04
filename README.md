@@ -67,6 +67,8 @@ Four sub-scores, each 0–100, combined as a weighted mean. A sub-score with no 
 
 ### The rules in detail
 
+**Time.** Every timestamp in an export is local wall-clock time plus the UTC offset in force when it was written (`2026-03-08 03:05:00 -0400`). Each one is converted to absolute time using that offset, so durations and overlaps stay correct when clocks change or you travel: a night across a spring-forward is 7 hours, one across a fall-back is 9, and the repeated hour is not counted twice. Days, hours and the times shown in findings use the wearer's local clock, taken from a timeline of the offsets seen in the export. An hour that never happened on the local clock (clocks jumping forward, or flying east) is not reported as a gap.
+
 **Sleep.** Asleep intervals are merged into sessions (gaps up to 90 minutes). Sessions with at least 90 minutes asleep are scored. The heart-rate ceiling for a night is `max(90, median sleeping heart rate + 30)`. Conflict minutes are the minutes within two minutes of a reading at or above the ceiling, plus minutes with 40 or more steps (after de-duplication). A night's trust is `1 − penalties`, and a night is flagged below 0.8:
 
 - Conflict: `min(1, 4 × conflict fraction)` when there are at least 15 conflict minutes and the fraction is at least 5%, otherwise a small penalty capped at 0.15.
@@ -114,6 +116,8 @@ There are three layers. The first two need only Node 20 or later.
 
 **Engine test.** `sample.js` generates a synthetic export with known faults planted in it: a night spent dancing, a night logged by two sources, a watch left on a desk, heart-rate glitches, a dead day. `test/engine.test.js` checks that each one is found, that the right source is named for each (the phone for the extra steps, the watch for the glitches), and that a single-source export claims no overlap.
 
+**Time zone tests.** `test/timezones.test.js` uses the real time-zone database to write exports the way a phone would, with offsets that change: New York across both daylight-saving changes, and a flight from London to Singapore and back. It checks no false gaps, no double-counted hours, correct sleep lengths, and that times shown stay local.
+
 **Rule tests.** `test/rules.test.js` builds tiny exports by hand and pins every rule at its boundary, so changing a threshold fails a test with a clear name. For example: a 59 bpm jump is not a spike but 60 is, a 720 minute sleep is fine but 721 is flagged, a gap at the same hour on 3 of 10 days is recurring but 2 of 10 is not, and splitting the file at every possible byte offset gives the same result.
 
 ```bash
@@ -154,6 +158,7 @@ Checked with [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.1 A and A
 ## Status and limits
 
 - **Tested on synthetic data only.** The thresholds have not yet been calibrated against real exports, so expect false positives and misses until they are.
+- **Offsets between records are inferred.** The timeline of UTC offsets comes from the records themselves, so if a clock change or a flight falls in a stretch with no data, the switch is placed at the first record after it, up to a few hours late.
 - **It finds contradictions, not sensor error.** Two signals disagreeing means something is off. It doesn't say which one, or whether the sensor is accurate.
 - **Apple Health only.** Fitbit exports (Google Takeout) are daily JSON files whose exact schema could not be confirmed from public documentation. Garmin's account export has sleep and daily summaries but no minute-level heart rate or steps, so the headline checks can't run on it.
 - **Not a medical device.** It checks data quality and doesn't diagnose, monitor or advise.
