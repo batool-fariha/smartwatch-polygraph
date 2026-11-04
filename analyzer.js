@@ -48,7 +48,7 @@
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
   const joinNames = (a) => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
   const KIND = ['watch', 'phone', 'other'];
-  const VERSION = '1.1.0';
+  const VERSION = '0.2.0-dev';   // matches CHANGELOG.md; becomes 0.2.0 when that release is tagged
   const r1 = (x) => Math.round(x * 10) / 10;
 
   /* ---------- streaming XML parser ---------- */

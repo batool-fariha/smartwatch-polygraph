@@ -32,7 +32,7 @@ describe('every finding is reportable without identifying anyone', () => {
   it('the facts used in a report are numbers and types only', () => {
     assert.equal(typeof r.facts.tzChanges, 'number');
     assert.ok(r.facts.sources.every((s) => ['watch', 'phone', 'other'].includes(s.kind)));
-    assert.match(WT.version, /^\d+\.\d+\.\d+$/);
+    assert.match(WT.version, /^\d+\.\d+\.\d+(-[a-z0-9.]+)?$/);
   });
   it('every rule the analyzer can produce is in the list the report form knows', () => {
     // the sample data exercises most rules; the rest are covered by the rule tests, so just check nothing outside the set appears

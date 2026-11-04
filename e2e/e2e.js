@@ -243,7 +243,7 @@ async function upload(page, file) {
     ok(await page.locator('#reportDlg[open]').count() === 1, 'dialog did not open');
     const text = await page.inputValue('#rpText');
     ok(/^Finding: [a-z.-]+$/m.test(text) && /^Numbers: .+\d/m.test(text), 'missing finding or numbers: ' + text);
-    ok(/^Source types: .*(watch|phone)/m.test(text) && /^Scores: overall \d+/m.test(text) && /^App: \d+\.\d+\.\d+, /m.test(text), 'missing source types, scores or app: ' + text);
+    ok(/^Source types: .*(watch|phone)/m.test(text) && /^Scores: overall \d+/m.test(text) && /^App: \d+\.\d+\.\d+[-\w.]*, /m.test(text), 'missing source types, scores or app: ' + text);
     ok(!NAMES_OR_DATES.test(text), 'report contains a name, date, month or weekday:\n' + text);
     const href = await page.getAttribute('#rpOpen', 'href'), u = new URL(href);
     eq(u.origin + u.pathname, 'https://github.com/batool-fariha/smartwatch-polygraph/issues/new', 'issue url');
