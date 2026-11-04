@@ -182,6 +182,7 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `fonts/` | Instrument Serif and Inter Tight (WOFF2, Latin subset) with their SIL OFL licences |
 | `vendor/` | fflate, the unzip library, with its MIT licence |
 | `LICENSE` | MIT licence for the code |
+| `CHANGELOG.md` | What changed and when; releases follow Semantic Versioning |
 | `.github/workflows/test.yml` | Runs all three test layers on every push and pull request |
 | `docs/` | README screenshots, captured at 2× resolution |
 
