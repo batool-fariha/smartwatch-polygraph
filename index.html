@@ -172,7 +172,8 @@ details ol{margin:10px 0 0;padding-left:20px}
 @media (max-width:900px){.t-a{grid-template-columns:1fr;gap:28px}.t-b,.t-c{grid-column:span 3}.t-d{grid-column:span 6}}
 @media (max-width:600px){.t-b,.t-c,.t-d{grid-column:span 6}.tile,.t-a{padding:24px}.tile{min-height:0}.t-e{flex-direction:column;align-items:flex-start;gap:20px;padding:24px}}
 
-svg text{font:500 10.5px var(--sans)}
+svg text{font:500 var(--fs,10.5px) var(--sans)}
+.halo{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
 .f-m{fill:var(--muted)}.f-i{fill:var(--ink)}.f-o{fill:var(--orange-text)}
 .gl{stroke:var(--line);stroke-width:1}
 
@@ -234,8 +235,8 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .rc span.d{font-size:14.5px;color:var(--muted);line-height:1.5;display:block}
 .tag{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--orange-text);display:block;margin-bottom:4px}
 .heatwrap{padding:24px}
-.heat{display:grid;grid-auto-flow:column;grid-auto-columns:16px;justify-content:start;grid-template-rows:repeat(7,16px);gap:4px;overflow-x:auto;padding-bottom:6px}
-.heat i{width:16px;height:16px;border-radius:4px;background:var(--h0)}
+.heat{display:grid;grid-auto-flow:column;grid-auto-columns:20px;justify-content:start;grid-template-rows:repeat(7,20px);gap:4px;overflow-x:auto;padding-bottom:6px}
+.heat i{width:20px;height:20px;border-radius:5px;background:var(--h0)}
 .legend{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-top:12px;flex-wrap:wrap}
 .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
 .note{font-size:13.5px;color:var(--muted);margin-top:48px;padding:20px 24px;line-height:1.5;background:transparent;border-style:dashed}
@@ -261,7 +262,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .cv.bars{max-width:340px}
 .lnk{margin-top:14px;display:block;background:none;border:0;padding:0;color:var(--orange-text);font:600 13px var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;border-radius:0}
 .lnk:hover{color:var(--ink);background:none}
-.heat .hd{width:16px;height:16px;border-radius:4px;border:0;padding:0;cursor:pointer;display:block}
+.heat .hd{width:20px;height:20px;border-radius:5px;border:0;padding:0;cursor:pointer;display:block}
 .heat .hd:hover{outline:2px solid var(--ink);outline-offset:1px;background-blend-mode:normal}
 .heat .hd.sel{outline:2px solid var(--ink);outline-offset:2px}
 .daydetail{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
@@ -287,6 +288,32 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
 .sr-b{height:4px;background:var(--h0);border-radius:9px;margin-top:10px;overflow:hidden}.sr-b i{display:block;height:100%;background:var(--orange);border-radius:9px}
 .ov{margin:20px 0 0;font-size:15.5px;line-height:1.55}.ov b{font-weight:600}.ov small{display:block;margin-top:6px;font-size:13.5px;color:var(--muted)}
 @media (max-width:560px){.hero{padding:28px 22px}.rwatch{width:170px}.rc>svg{display:none}.rc{padding:18px}}
+
+/* results jump bar */
+:root{--navh:52px}
+nav>div{padding:4px 24px}
+.brand{min-height:44px}
+.jump{position:sticky;top:var(--navh);z-index:4;margin:0 -24px;padding:8px 24px;display:flex;gap:8px;overflow-x:auto;background:rgba(247,244,237,.92);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line);scrollbar-width:none}
+.jump::-webkit-scrollbar{display:none}
+.jump a{flex:none;display:inline-flex;align-items:center;min-height:40px;padding:0 16px;font:600 13.5px/1 var(--sans);color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:99px;background:var(--card)}
+.jump a:hover{background:#f0ebe0}
+h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
+.fig-m{display:none}
+/* phones and touch screens */
+@media (max-width:760px),(pointer:coarse){
+  .fb{min-height:44px;padding:0 18px}
+  .lnk{padding:12px 0;margin-top:4px}
+  .foot a{display:inline-block;padding:12px 0}
+  .foot .ic{gap:0}.foot .ic a{width:44px;height:44px;padding:0}
+}
+@media (max-width:600px){
+  .fig-d{display:none}.fig-m{display:block;width:100%;height:auto}
+  .cta{flex-direction:column;align-items:stretch}.cta .btn,.cta button,.drop .row .btn,.drop .row button,.hero .row .btn,.hero .row button{flex:1 1 100%;width:100%;text-align:center;justify-content:center;padding:16px 22px}
+  .drop .row,.hero .row{flex-direction:column;align-items:stretch}
+  .hero{justify-content:center;gap:24px}.rwatch{margin:0 auto}.verdict{flex:1 1 100%;min-width:0;max-width:none}
+  .heat{grid-template-rows:repeat(7,24px);grid-auto-columns:24px}.heat .hd,.heat i{width:24px;height:24px;border-radius:6px}
+  .jump{margin:0 -24px}
+}
 </style>
 </head>
 <body>
@@ -365,8 +392,9 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
           <ol>
             <li><span>1</span><p><b>Open Health</b> and tap your profile picture.</p></li>
             <li><span>2</span><p>Tap <b>Export All Health Data</b>, then <b>Export</b>.</p></li>
-            <li><span>3</span><p>Save <b>export.zip</b> to this computer and drop it in the card.</p></li>
+            <li><span>3</span><p>Save <b>export.zip</b>, then choose it in the card above.</p></li>
           </ol>
+          <p class="fine" style="margin-top:16px">A phone can open it, but very large exports are easier on a computer.</p>
         </div>
       </div>
     </section>
@@ -387,7 +415,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
             <p class="facts"><span><b>9h 05m</b> logged</span><span><b>22</b> readings over 90 bpm</span><span><b>25 min</b> walking</span></p>
           </div>
           <div class="fg">
-            <svg viewBox="0 0 560 160" role="img" aria-label="Heart rate over one night. A two-hour spike to 128 beats per minute sits inside a sleep bar logged from 23:00 to 08:30." style="width:100%;height:auto">
+            <svg class="fig-d" viewBox="0 0 560 160" role="img" aria-label="Heart rate over one night. A two-hour spike to 128 beats per minute sits inside a sleep bar logged from 23:00 to 08:30." style="width:100%;height:auto">
               <rect x="119" y="6" width="105" height="132" fill="var(--orange)" opacity=".07"/>
               <line x1="40" x2="540" y1="60" y2="60" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".55"/>
               <text x="540" y="52" text-anchor="end" class="f-m">90 bpm sleeping ceiling</text>
@@ -398,6 +426,18 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
               <rect x="40" y="112" width="500" height="14" rx="7" fill="var(--yellow)"/>
               <text x="48" y="122.500" class="f-i" style="font-weight:600;font-size:10px">Logged as asleep</text>
               <text x="40" y="150" class="f-m">23:00</text><text x="540" y="150" text-anchor="end" class="f-m">08:30</text>
+            </svg>
+            <svg class="fig-m" style="--fs:14px" viewBox="0 0 320 166" role="img" aria-label="Heart rate over one night. A two-hour spike to 128 beats per minute sits inside a sleep bar logged from 23:00 to 08:30.">
+              <rect x="60" y="6" width="62" height="128" fill="var(--orange)" opacity=".07"/>
+              <line x1="14" x2="306" y1="60" y2="60" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".55"/>
+              <text x="306" y="52" text-anchor="end" class="f-m">90 bpm ceiling</text>
+              <polyline points="14,96 31.5,94 49,97 60,96 121.5,96 136.7,97 165.9,95 195,97 224.2,96 253.4,95 282.6,97 306,96" fill="none" stroke="var(--ink)" stroke-width="1.5" opacity=".5" stroke-linejoin="round"/>
+              <polyline points="60,96 65.3,66 72.4,44 79.4,30 87,56 94.6,22 102.8,42 110.4,32 118,54 121.5,82 126.2,97" fill="none" stroke="var(--orange)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="94.6" cy="22" r="3.5" fill="var(--orange)"/>
+              <text x="133" y="26" class="f-o" style="font-weight:600">Peak 128 bpm</text>
+              <rect x="14" y="110" width="292" height="20" rx="10" fill="var(--yellow)"/>
+              <text x="24" y="125" class="f-i" style="font-weight:600;font-size:14px">Logged as asleep</text>
+              <text x="14" y="156" class="f-m">23:00</text><text x="306" y="156" text-anchor="end" class="f-m">08:30</text>
             </svg>
             <p class="cap">Night ending Sun 13 Sep, from the sample data.</p>
           </div>
@@ -485,6 +525,7 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
   </div>
 
   <section id="out">
+    <nav class="jump" id="jump" aria-label="On this page"><a href="#sec-score">Score</a><a href="#sec-sources">Sources</a><a href="#sec-findings">Findings</a><a href="#sec-days">Days</a></nav>
     <div class="panel hero in">
       <div class="rwatch" id="rwatch"></div>
       <div class="verdict"><h1 class="g" id="grade" tabindex="-1"></h1><p id="sum"></p><p class="s" id="span"></p>
@@ -492,19 +533,19 @@ h2.rh{font:400 clamp(32px,4.4vw,46px)/1 var(--serif);letter-spacing:-.02em;margi
         <div class="row" style="margin-top:22px"><button class="primary" id="share">Download share card</button><button class="ghost" id="again">Check another</button></div></div>
     </div>
 
-    <h2 class="rh">Score breakdown</h2>
+    <h2 class="rh" id="sec-score">Score breakdown</h2>
     <div class="grid" id="cards"></div>
 
     <div id="srcsec">
-      <h2 class="rh">Where your data comes from</h2>
+      <h2 class="rh" id="sec-sources">Where your data comes from</h2>
       <div class="panel srcs" id="srcs"></div>
     </div>
 
-    <h2 class="rh">What it found</h2>
+    <h2 class="rh" id="sec-findings">What it found</h2>
     <div class="filters" id="filters"></div>
     <div id="receipts"></div>
 
-    <h2 class="rh">Every day</h2>
+    <h2 class="rh" id="sec-days">Every day</h2>
     <div class="panel heatwrap" id="heatwrap">
       <div class="heat" id="heat" aria-label="Daily trust score calendar"></div>
       <div class="legend"><i style="background:var(--h4)"></i>clean <i style="background:var(--h3)"></i><i style="background:var(--h2)"></i><i style="background:var(--h1)"></i>contradictory <i style="background:var(--h0);margin-left:8px"></i>no data · click a day</div>
@@ -671,22 +712,23 @@ function countTo(el, target, delayMs, dur) {
 }
 
 /* mini charts, built from the user's own readings */
+const compact = () => matchMedia('(max-width:600px)').matches;
 function sleepChart(c) {
-  const W = 520, H = 150, L = 30, R = 6, T = 14, B = 44, span = c.e - c.s, xs = (t) => L + (t - c.s) / span * (W - L - R);
+  const K = compact(), W = K ? 300 : 520, H = K ? 150 : 150, L = K ? 26 : 30, R = 6, T = 14, B = 44, span = c.e - c.s, xs = (t) => L + (t - c.s) / span * (W - L - R);
   const vs = c.pts.length ? c.pts.map((p) => p[1]) : [60];
   const lo = Math.min(40, Math.min(...vs) - 4), hi = Math.max(c.thr + 14, Math.max(...vs) + 6), ys = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const line = c.pts.map((p) => `${xs(p[0]).toFixed(1)},${ys(p[1]).toFixed(1)}`).join(' ');
   const hot = c.pts.filter((p) => p[1] >= c.thr).map((p) => `<circle cx="${xs(p[0]).toFixed(1)}" cy="${ys(p[1]).toFixed(1)}" r="2.6" fill="var(--orange)"/>`).join('');
   const bar = c.blocks.map((b) => `<rect x="${xs(b[0]).toFixed(1)}" y="${H - B + 10}" width="${Math.max(1, xs(b[1]) - xs(b[0])).toFixed(1)}" height="12" rx="3" fill="var(--yellow)"/>`).join('');
   const yt = ys(c.thr).toFixed(1);
-  return `<div class="cv"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Heart rate across the night. Readings above ${c.thr} bpm are marked in orange."><line x1="${L}" x2="${W - R}" y1="${yt}" y2="${yt}" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".6"/><text x="${W - R}" y="${yt - 5}" text-anchor="end" class="f-m">${c.thr} bpm ceiling</text>${line ? `<polyline points="${line}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/>` : ''}${hot}<text x="${L}" y="${H - B + 4}" class="f-m">Logged as asleep</text>${bar}<text x="${L}" y="${H - 2}" class="f-m">${hm(c.s + (c.offS || 0))}</text><text x="${W - R}" y="${H - 2}" text-anchor="end" class="f-m">${hm(c.e + (c.offE || 0))}</text></svg></div>`;
+  return `<div class="cv"><svg style="--fs:${K ? 12 : 10.5}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="Heart rate across the night. Readings above ${c.thr} bpm are marked in orange."><line x1="${L}" x2="${W - R}" y1="${yt}" y2="${yt}" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".6"/>${line ? `<polyline points="${line}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/>` : ''}${hot}<text x="${W - R}" y="${yt - 5}" text-anchor="end" class="f-m halo">${c.thr} bpm ceiling</text><text x="${L}" y="${H - B + 4}" class="f-m">Logged as asleep</text>${bar}<text x="${L}" y="${H - 2}" class="f-m">${hm(c.s + (c.offS || 0))}</text><text x="${W - R}" y="${H - 2}" text-anchor="end" class="f-m">${hm(c.e + (c.offE || 0))}</text></svg></div>`;
 }
 function blipChart(c) {
   if (!c.pts.length) return '';
   const W = 300, H = 96, L = 8, R = 8, T = 18, B = 24, x0 = c.at - 20, x1 = c.at + 20, xs = (t) => L + (t - x0) / (x1 - x0) * (W - L - R);
   const vs = c.pts.map((p) => p[1]), lo = Math.min(...vs) - 6, hi = Math.max(...vs) + 6, ys = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const mx = xs(c.at), my = ys(c.v), right = mx > W - 70;
-  return `<div class="cv" style="max-width:300px"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Heart rate for 20 minutes either side of the reading of ${c.v} bpm"><polyline points="${c.pts.map((p) => `${xs(p[0]).toFixed(1)},${ys(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="4" fill="var(--orange)"/><text x="${(mx + (right ? -9 : 9)).toFixed(1)}" y="${(my + 4).toFixed(1)}" text-anchor="${right ? 'end' : 'start'}" class="f-o" style="font-weight:600;font-size:12px">${c.v} bpm</text><text x="${L}" y="${H - 4}" class="f-m">${hm(x0 + (c.off || 0))}</text><text x="${W - R}" y="${H - 4}" text-anchor="end" class="f-m">${hm(x1 + (c.off || 0))}</text></svg></div>`;
+  return `<div class="cv" style="max-width:300px"><svg style="--fs:${compact() ? 12 : 10.5}px" viewBox="0 0 ${W} ${H}" role="img" aria-label="Heart rate for 20 minutes either side of the reading of ${c.v} bpm"><polyline points="${c.pts.map((p) => `${xs(p[0]).toFixed(1)},${ys(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="4" fill="var(--orange)"/><text x="${(mx + (right ? -9 : 9)).toFixed(1)}" y="${(my + 4).toFixed(1)}" text-anchor="${right ? 'end' : 'start'}" class="f-o" style="font-weight:600;font-size:12px">${c.v} bpm</text><text x="${L}" y="${H - 4}" class="f-m">${hm(x0 + (c.off || 0))}</text><text x="${W - R}" y="${H - 4}" text-anchor="end" class="f-m">${hm(x1 + (c.off || 0))}</text></svg></div>`;
 }
 function stepsChart(c) {
   const g = Math.max(0, Math.min(100, c.dedup / c.raw * 100));
@@ -707,6 +749,7 @@ function receiptCard(r, i) {
 function renderSources(rep) {
   const f = rep.facts, list = f.sources || [], o = f.stepOverlap || {}, box = $('#srcs');
   $('#srcsec').style.display = list.length ? '' : 'none';
+  $('#jump a[href="#sec-sources"]').style.display = list.length ? '' : 'none';
   if (!list.length) return;
   const total = list.reduce((a, s) => a + s.steps + s.hr + s.sleep, 0) || 1, pct = Math.round((o.share || 0) * 100);
   const rows = list.map((s) => {
@@ -753,12 +796,15 @@ function openDay(i, scroll) {
     ${fs.length ? `<ul class="dd-f">${fs.map((r) => `<li>${esc(r.title)}</li>`).join('')}</ul>` : '<p class="dd-none">No findings on this day.</p>'}`;
   if (scroll) document.getElementById('heatwrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+let wasCompact = compact();
+addEventListener('resize', () => { const k = compact(); if (k !== wasCompact && REPORT) { wasCompact = k; renderReceipts(); } });
 $('#filters').addEventListener('click', (e) => { const b = e.target.closest('.fb'); if (b) { FILTER = b.dataset.k; renderReceipts(); } });
 $('#receipts').addEventListener('click', (e) => { const b = e.target.closest('.lnk'); if (b) openDay(+b.dataset.day - REPORT.daily[0].day, true); });
 $('#heat').addEventListener('click', (e) => { const b = e.target.closest('.hd'); if (b) openDay(+b.dataset.i, false); });
 
 function render(rep) {
   REPORT = rep; FILTER = 'all';
+  $('#share').textContent = canShareFiles() ? 'Share card' : 'Download share card';
   $('#landing').style.display = 'none'; $('#prog').style.display = 'none'; $('#out').style.display = 'block';
   const sc = Math.round(rep.scores.overall), f = rep.facts;
   const rw = $('#rwatch'); rw.innerHTML = resultWatch(rep); rw.classList.remove('go');
@@ -772,7 +818,7 @@ function render(rep) {
     ['Sleep', 'moon', rep.scores.sleep, f.nights ? `${f.flaggedNights} of ${f.nights} nights conflict with heart rate, movement or a second source. Your usual sleeping pulse: ${Math.round(f.medianSleepHr)} bpm.` : 'No sleep records.'],
     ['Steps', 'steps', rep.scores.steps, f.rawSteps ? `The raw export totals ${f.rawSteps.toLocaleString()} steps; real movement was about ${f.dedupSteps.toLocaleString()} (${Math.round(f.inflation * 100)}% inflated by phone + watch overlap).` : 'No step records.'],
     ['Heart rate', 'heart', rep.scores.hr, f.hrSamples >= 100 ? `${f.hrImpossible} impossible readings and ${f.hrBlips} single-reading spikes across ${f.hrSamples.toLocaleString()} samples.` : 'Not enough heart-rate data.'],
-    ['Coverage', 'gap', rep.scores.coverage, f.coverageDays ? `Watch data present ${f.avgHoursWithData.toFixed(1)} h/day on average.${f.recurringGap ? ` It goes dark around ${String(f.recurringGap.hour).padStart(2, '0')}:00 on ${f.recurringGap.days} days.` : ''}${f.darkDays ? ` ${f.darkDays} day(s) with nothing.` : ''}` : 'No coverage data.']
+    ['Coverage', 'gap', rep.scores.coverage, f.coverageDays ? `Watch data present ${f.avgHoursWithData.toFixed(1)} h/day on average.${f.recurringGap ? ` It goes dark around ${String(f.recurringGap.hour).padStart(2, '0')}:00 on ${f.recurringGap.days} days.` : ''}${f.darkDays ? ` ${f.darkDays} day${f.darkDays === 1 ? '' : 's'} with nothing.` : ''}` : 'No coverage data.']
   ];
   $('#cards').innerHTML = cards.map(([k, ic, s, t], i) => {
     const has = s !== null;
@@ -849,11 +895,17 @@ async function buildShareCard() {
   g.font = `600 27px ${SANS}`; g.fillStyle = INK; g.fillText('smartwatch-polygraph.vercel.app', 540, 1300);
   return c;
 }
+const canShareFiles = () => matchMedia('(pointer:coarse)').matches && !!navigator.canShare && !!navigator.share && navigator.canShare({ files: [new File([''], 'x.png', { type: 'image/png' })] });
 async function shareCard() {
   const btn = $('#share'), label = btn.textContent; btn.textContent = 'Drawing…';
   try {
     const c = await buildShareCard();
-    c.toBlob((b) => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'smartwatch-polygraph-score.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
+    const blob = await new Promise((res) => c.toBlob(res));
+    const file = new File([blob], 'smartwatch-polygraph-score.png', { type: 'image/png' });
+    if (canShareFiles()) {                                   // phones: the native share sheet (Messages, Instagram, save to Photos…)
+      try { await navigator.share({ files: [file], title: 'My smartwatch trust score' }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   } finally { btn.textContent = label; }
 }
 </script>

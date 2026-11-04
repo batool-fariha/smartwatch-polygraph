@@ -168,14 +168,80 @@ async function upload(page, file) {
     });
   }
 
-  console.log('\nAccessibility (axe-core, WCAG 2.1 A and AA plus best practices)');
+  console.log('\nPhones');
+  const phoneCtx = (w) => ({ viewport: { width: w, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const audit = (page) => page.evaluate(() => {
+    const vw = document.documentElement.clientWidth, bad = { overflow: document.documentElement.scrollWidth - vw, small: [], tiny: [] };
+    for (const el of document.querySelectorAll('body *')) {
+      const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden' || el.closest('.sr')) continue;
+      const b = el.getBoundingClientRect(); if (!b.width || !b.height) continue;
+      if (['A', 'BUTTON', 'LABEL', 'SUMMARY'].includes(el.tagName) || el.getAttribute('role') === 'button') {
+        const min = el.classList.contains('hd') ? 24 : 40;          // calendar cells are 24px apart, the WCAG 2.2 minimum
+        if ((b.height < min || b.width < min) && !(cs.position === 'absolute' && b.left < 0)) bad.small.push(`${(el.textContent || el.getAttribute('aria-label') || el.id || el.tagName).trim().slice(0, 24)} ${Math.round(b.width)}x${Math.round(b.height)}`);
+      }
+      if (el.children.length === 0 && (el.textContent || '').trim()) {
+        let px = parseFloat(cs.fontSize);
+        if (el.tagName === 'text') { const svg = el.ownerSVGElement, vb = svg.viewBox.baseVal; if (vb && vb.width) px *= svg.getBoundingClientRect().width / vb.width; }
+        if (px < (vw < 340 ? 9 : 10)) bad.tiny.push(`${el.textContent.trim().slice(0, 20)} ${px.toFixed(1)}px`);
+      }
+    }
+    return bad;
+  });
+  for (const w of [320, 375, 414]) {
+    await test(`${w}px wide: no sideways scrolling, tap targets of 40px or more, readable chart text`, async () => {
+      const { page, ctx } = await open(phoneCtx(w));
+      for (const state of ['landing', 'results']) {
+        if (state === 'results') { await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' }); await page.waitForTimeout(500); }
+        const a = await audit(page);
+        ok(a.overflow <= 0, `${state}: page is ${a.overflow}px wider than the screen`);
+        eq(a.small.length, 0, `${state}: small tap targets: ${[...new Set(a.small)].slice(0, 6).join(', ')}`);
+        eq(a.tiny.length, 0, `${state}: text too small: ${[...new Set(a.tiny)].slice(0, 6).join(', ')}`);
+      }
+      await ctx.close();
+    });
+  }
+  await test('phone: the jump bar scrolls to each section, and the sections are all there', async () => {
+    const { page, ctx } = await open(phoneCtx(375));
+    await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' });
+    await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; });
+    for (const [label, id] of [['Findings', 'sec-findings'], ['Days', 'sec-days'], ['Sources', 'sec-sources'], ['Score', 'sec-score']]) {
+      await page.click(`#jump a:text-is("${label}")`);
+      // wait for the scroll to settle with the heading just under the sticky bars, instead of sleeping a fixed time
+      await page.waitForFunction((i) => { const t = document.getElementById(i).getBoundingClientRect().top; return t >= 60 && t < 260; }, id, { timeout: 4000 }).catch(() => {});
+      const top = await page.evaluate((i) => Math.round(document.getElementById(i).getBoundingClientRect().top), id);
+      ok(top >= 60 && top < 260, `${label}: heading is at ${top}px, not just under the sticky bars`);
+    }
+    await ctx.close();
+  });
+  await test('phone: charts are drawn compactly and redrawn when the screen is widened', async () => {
+    const { page, ctx } = await open(phoneCtx(375));
+    await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' });
+    const vb = () => page.evaluate(() => document.querySelector('.rc .cv svg').getAttribute('viewBox').split(' ')[2]);
+    eq(await vb(), '300', 'phone chart width');
+    await page.setViewportSize({ width: 900, height: 800 }); await page.waitForTimeout(300);
+    eq(await vb(), '520', 'desktop chart width after resize');
+    await ctx.close();
+  });
+  await test('phone: the share button opens the native share sheet with the card as a file', async () => {
+    const { page, ctx } = await open({ ...phoneCtx(375) });
+    await page.addInitScript(() => { navigator.canShare = () => true; navigator.share = async (d) => { window.__shared = { name: d.files[0].name, type: d.files[0].type, size: d.files[0].size }; }; });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' });
+    eq((await page.textContent('#share')).trim(), 'Share card', 'button label on a touch device');
+    await page.click('#share'); await page.waitForFunction(() => window.__shared);
+    const f = await page.evaluate(() => window.__shared);
+    eq(f.name, 'smartwatch-polygraph-score.png', 'shared file name'); eq(f.type, 'image/png', 'type'); ok(f.size > 20000, 'file too small: ' + f.size);
+    await ctx.close();
+  });
+
+  console.log('\nAccessibility (axe-core, WCAG 2.2 A and AA plus best practices)');
   for (const state of ['landing', 'results']) {
     await test(`${state} has no violations`, async () => {
       const { page, ctx } = await open();
       if (state === 'results') { await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' }); }
       await page.waitForTimeout(4000);                  // let animations settle so contrast is measured on final colours
       await page.evaluate(axe.source);
-      const v = await page.evaluate(async () => (await axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] })).violations.map((x) => `${x.id} (${x.nodes.length}): ${x.nodes[0].target.join(' ')}`));
+      const v = await page.evaluate(async () => (await axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa', 'best-practice'] })).violations.map((x) => `${x.id} (${x.nodes.length}): ${x.nodes[0].target.join(' ')}`));
       eq(v.length, 0, 'violations:\n' + v.join('\n'));
       await ctx.close();
     });

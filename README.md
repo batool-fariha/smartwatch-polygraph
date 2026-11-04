@@ -42,6 +42,8 @@ Your own watch is the result: each ring is as long as its sub-score, and the num
 
 ![A calendar coloured by day score, with the selected day broken down underneath](docs/calendar.jpg)
 
+**On a phone** the page is laid out for the thumb: full-width buttons, tap targets of at least 40 px (the calendar cells are 24 px apart, the WCAG 2.2 minimum), charts redrawn compactly with labels you can read, and a sticky bar (Score, Sources, Findings, Days) so a long result is easy to move around. The share button opens the native share sheet with the card as an image.
+
 **Share card.** **Download share card** draws a 1080 × 1350 image from your own result: your watch with your ring lengths, the grade, the four sub-scores and your top finding. It is drawn in the page, so nothing leaves your browser.
 
 <img src="docs/share-card.jpg" alt="A share card showing the watch, the grade Mostly honest, four sub-scores and a quoted finding" width="360">
@@ -124,7 +126,7 @@ There are three layers. The first two need only Node 20 or later.
 node --test test/
 ```
 
-**Browser tests.** `e2e/e2e.js` drives the real page in Chromium: the landing page makes no third-party requests and loads its fonts; the sample result, filters, calendar and share card work; an `export.xml` and the same export zipped give identical results; a wrong, truncated, empty or non-Health file shows a plain message and the page recovers; the keyboard paths work; and [axe-core](https://github.com/dequelabs/axe-core) finds no accessibility violations on the landing page or the results. With `--stress` it also generates a 70 MB export and loads it as XML and as a zip, failing if it takes over 90 seconds, freezes the page for over 3 seconds or uses over 1 GB.
+**Browser tests.** `e2e/e2e.js` drives the real page in Chromium: the landing page makes no third-party requests and loads its fonts; the sample result, filters, calendar and share card work; at 320, 375 and 414 px wide nothing scrolls sideways, every tap target is large enough and chart text stays readable, the jump bar lands on each section, and the share button hands the card to the native share sheet; an `export.xml` and the same export zipped give identical results; a wrong, truncated, empty or non-Health file shows a plain message and the page recovers; the keyboard paths work; and [axe-core](https://github.com/dequelabs/axe-core) finds no violations on the landing page or the results against WCAG 2.2 A and AA. With `--stress` it also generates a 70 MB export and loads it as XML and as a zip, failing if it takes over 90 seconds, freezes the page for over 3 seconds or uses over 1 GB.
 
 ```bash
 cd e2e
@@ -153,7 +155,7 @@ The page has no backend. The export is parsed in the tab and nothing is sent any
 
 ## Accessibility
 
-Checked with [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.1 A and AA plus best practices) on both the landing page and the results screen, with no violations. Orange text uses darker shades (`#b84c00` for small text, `#e05e00` for large) so it meets contrast ratios, while the brand orange stays on fills. There is a skip link, the animated watch replays from the keyboard (Enter or Space), focus moves to the result heading when a result appears, and animations stay still for anyone with reduced motion turned on. This is an automated audit plus manual keyboard checks, not a full screen-reader review.
+Checked with [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.2 A and AA, including the minimum target size, plus best practices) on both the landing page and the results screen, with no violations. Orange text uses darker shades (`#b84c00` for small text, `#e05e00` for large) so it meets contrast ratios, while the brand orange stays on fills. There is a skip link, the animated watch replays from the keyboard (Enter or Space), focus moves to the result heading when a result appears, and animations stay still for anyone with reduced motion turned on. This is an automated audit plus manual keyboard checks, not a full screen-reader review.
 
 ## Status and limits
 
