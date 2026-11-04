@@ -302,7 +302,8 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
 /* phones and touch screens */
 @media (max-width:760px),(pointer:coarse){
   .fb{min-height:44px;padding:0 18px}
-  .lnk{padding:12px 0;margin-top:4px}
+  .acts .lnk{display:inline-flex;align-items:center;min-height:44px;padding:0;margin-top:4px}   /* explicit height: line-height and padding vary by platform font */
+  .rp-gen{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px}.rp-gen .lnk{display:inline-flex;align-items:center;min-height:44px;padding:0}
   .foot a{display:inline-block;padding:12px 0}
   .foot .ic{gap:0}.foot .ic a{width:44px;height:44px;padding:0}
 }
