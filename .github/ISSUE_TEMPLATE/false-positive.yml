@@ -1,0 +1,34 @@
+name: Report a false positive or a miss
+description: A finding that was wrong or misleading, or something the tool should have caught.
+title: "Report: "
+labels: ["calibration"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. This is how the thresholds get better, since they have only been tested on synthetic data.
+
+        Please do not paste dates, names or any part of your export. The details box below was filled in by the page and contains only numbers, source types and the app version.
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: What kind of report is this?
+      options:
+        - "False positive: it flagged something that was not wrong"
+        - "Real, but the wording or advice was misleading"
+        - "Missed something it should have caught"
+        - "Something else"
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: What actually happened? (optional)
+      description: For example, "I really was awake at a wedding, so this one is right", or "the watch was charging that night".
+  - type: textarea
+    id: details
+    attributes:
+      label: Details from the page
+      description: Filled in automatically. Edit or delete anything you would rather not share.
+    validations:
+      required: true

@@ -48,6 +48,8 @@
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
   const joinNames = (a) => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
   const KIND = ['watch', 'phone', 'other'];
+  const VERSION = '1.1.0';
+  const r1 = (x) => Math.round(x * 10) / 10;
 
   /* ---------- streaming XML parser ---------- */
   function createParser(analyzer) {
@@ -190,6 +192,7 @@
       blipEv.sort((a, b) => Math.abs(b.v - (b.p + b.nx) / 2) - Math.abs(a.v - (a.p + a.nx) / 2));
       for (const b of blipEv.slice(0, 2)) receipts.push({
         kind: 'hr', severity: 62, date: fmtDay(ldayAbs(b.m)), day: ldayAbs(b.m), chart: { type: 'blip', at: b.m, off: offsetAt(b.m), v: Math.round(b.v), pts: around(b.m, 20) },
+        rule: 'heart-rate.spike', data: { valueBpm: Math.round(b.v), beforeBpm: Math.round(b.p), afterBpm: Math.round(b.nx) },
         sources: [names[b.sid]], fix: 'Check how snugly the band sits. Readings like this are usually a loose strap, and they are safe to filter out.',
         title: `Heart rate "jumped" to ${Math.round(b.v)} bpm for a single reading`,
         detail: `${names[b.sid]} recorded ${Math.round(b.p)}, then ${Math.round(b.v)}, then ${Math.round(b.nx)} bpm within minutes at ${hhmm(localMin(b.m))} on ${fmtDay(ldayAbs(b.m))}, outside any workout. A physiological spike doesn't reverse itself that fast; this is a sensor glitch.`
@@ -197,6 +200,7 @@
       impEv.sort((a, b) => Math.abs(b.v - 130) - Math.abs(a.v - 130));
       for (const b of impEv.slice(0, 2)) receipts.push({
         kind: 'hr', severity: 72, date: fmtDay(ldayAbs(b.m)), day: ldayAbs(b.m), chart: { type: 'blip', at: b.m, off: offsetAt(b.m), v: Math.round(b.v), pts: around(b.m, 20) },
+        rule: 'heart-rate.impossible', data: { valueBpm: Math.round(b.v) },
         sources: [names[b.sid]], fix: 'Check how snugly the band sits, and filter readings outside 30–230 bpm before averaging.',
         title: `An impossible heart rate: ${Math.round(b.v)} bpm`,
         detail: `${names[b.sid]} recorded this at ${hhmm(localMin(b.m))} on ${fmtDay(ldayAbs(b.m))}. Outside 30–230 bpm isn't a plausible human reading; it's stored in your export all the same.`
@@ -285,7 +289,10 @@
           const stp = Math.max(1, Math.ceil(pts.length / 160));
           const chart = { type: 'sleep', s: ss.s, e: ss.e, offS: offsetAt(ss.s), offE: offsetAt(ss.e), thr: Math.round(thr), peak: Math.round(hrPeak),
             pts: pts.filter((p, i) => i % stp === 0 || p[1] >= thr), blocks: ss.blocks.map((b) => [b.s, b.e]) };
-          receipts.push({ kind: 'sleep', severity: Math.round((1 - trust) * 100), date: day, day: wakeDi + firstDay, title, detail, fix, sources: sn, chart });
+          const data = { asleepMinutes: Math.round(ss.asleepMin), trust: Math.round(trust * 100) / 100, heartRateReadings: hrN, readingsAtOrAboveCeiling: hrElev, ceilingBpm: Math.round(thr),
+            medianSleepBpm: Math.round(medSleepHr || 0), peakBpm: Math.round(hrPeak), walkingMinutes: walk.size, conflictMinutes: conflict, conflictPercent: r1(fraction * 100),
+            sourceOverlapRatio: Math.round(ss.raw / ss.asleepMin * 100) / 100, sourcesLoggingSleep: ss.srcs.size };
+          receipts.push({ kind: 'sleep', rule: 'sleep.' + main, data, severity: Math.round((1 - trust) * 100), date: day, day: wakeDi + firstDay, title, detail, fix, sources: sn, chart });
         }
       }
       const sleepScore = sleepDen ? (sleepNum / sleepDen) * 100 : null;
@@ -329,6 +336,7 @@
       for (const d of stepDays.slice(0, 3)) receipts.push({
         kind: 'steps', severity: Math.round(Math.min(100, d.f * 100)), date: fmtDay(d.di + firstDay), day: d.di + firstDay, chart: { type: 'steps', raw: Math.round(d.raw), dedup: Math.round(d.dedup) },
         title: `${Math.round(d.raw).toLocaleString('en-US')} steps on ${fmtDay(d.di + firstDay)}, but you only moved ${Math.round(d.dedup).toLocaleString('en-US')}`,
+        rule: 'steps.double-count', data: { exportSteps: Math.round(d.raw), realSteps: Math.round(d.dedup), inflationPercent: Math.round(d.f * 100), overlapPercentOfMovingMinutes: Math.round((minAny ? minBoth / minAny : 0) * 100) },
         sources: [keepName, extraName].filter(Boolean),
         fix: `Sum steps from ${keepName || 'one source'} only. Apple's Health app already merges sources in its own totals, but tools that read the raw export don't.`,
         detail: `${keepName && extraName ? keepName + ' and ' + extraName : 'Phone and watch'} both recorded the same walking, so the raw export overstates the day by ${Math.round(d.f * 100)}%.${extraName ? ' Most of the extra steps came from ' + extraName + '.' : ''}`
@@ -380,6 +388,7 @@
         if (recurring) receipts.push({
           kind: 'coverage', severity: 45, date: '', day: null, chart: { type: 'gaps', hour: recurring.hour },
           title: `Your watch goes dark around ${String(recurring.hour).padStart(2, '0')}:00 on ${recurring.days} of ${recurring.of} days`,
+          rule: 'coverage.recurring-gap', data: { hourOfDay: recurring.hour, daysWithGap: recurring.days, ofDays: recurring.of, hoursLostPerDay: r1(hoursLost / coverageDays) },
           sources: watchName ? [watchName] : [],
           fix: 'Charging at a time you are not wearing it for sleep or a workout keeps those periods covered.',
           detail: `${watchName ? watchName + ' stops recording here. ' : ''}That's the charging window. It silently removes about ${(hoursLost / coverageDays).toFixed(1)} h/day from your record, and anything computed per-day (average heart rate, active time) is computed over a different slice of the day each time.`
@@ -388,6 +397,7 @@
         for (const r of darkRuns.slice(0, 1)) receipts.push({
           kind: 'coverage', severity: 55, date: fmtDay(r.from + firstDay), day: r.from + firstDay,
           title: `${r.len} day${r.len > 1 ? 's' : ''} of nothing starting ${fmtDay(r.from + firstDay)}`,
+          rule: 'coverage.dark-days', data: { consecutiveDays: r.len },
           fix: 'Check whether the watch ran out of battery or was left off that day.',
           detail: `No heart-rate data at all. In a daily summary these days look like "0", not "missing", unless the reader knows to check.`
         });
@@ -429,6 +439,7 @@
           hrSamples: n, hrImpossible: impossible, hrBlips: blips,
           coverageDays, avgHoursWithData: avgHours, hoursLostToShortGaps: hoursLost, recurringGap: recurring,
           darkDays: darkRuns.reduce((a, r) => a + r.len, 0), longestDark: darkRuns[0] ? darkRuns[0].len : 0,
+          tzChanges: Math.max(0, segs.length - 1),
           sources: names.map((nm, i) => ({ name: nm, kind: KIND[srcCls[i]], steps: srcStat[i].steps, hr: srcStat[i].hr, sleep: srcStat[i].sleep }))
             .sort((a, b) => (b.steps + b.hr + b.sleep) - (a.steps + a.hr + a.sleep)).slice(0, 8),
           stepOverlap: { minutesAny: minAny, minutesBoth: minBoth, share: minAny ? minBoth / minAny : 0, extra: Math.round(rawTot - dedupTot), keep: keepName, extraFrom: extraName }
@@ -440,5 +451,5 @@
     return { addRecord, addWorkout, finish, counts };
   }
 
-  return { createAnalyzer, createParser, fmtDay, fmtDur, hhmm };
+  return { createAnalyzer, createParser, fmtDay, fmtDur, hhmm, version: VERSION };
 });

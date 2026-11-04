@@ -117,7 +117,7 @@ async function upload(page, file) {
     ok(await page.evaluate(() => [...document.querySelectorAll('.rc .tag')].every((t) => /steps/i.test(t.textContent))), 'filter shows other kinds');
     await page.click('.fb[data-k="all"]');
     const before = await page.textContent('#daydetail .dd-h b');
-    await page.locator('.lnk').nth(3).click();
+    await page.locator('.lnk[data-day]').nth(3).click();
     const after = await page.textContent('#daydetail .dd-h b');
     ok(after !== before, 'See this day did not change the selected day');
     await page.locator('.hd').nth(5).click();
@@ -234,11 +234,53 @@ async function upload(page, file) {
     await ctx.close();
   });
 
+  console.log('\nReporting a problem');
+  const NAMES_OR_DATES = /Sam|20\d\d|\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\b|\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\b/;
+  await test('a finding opens a report with exactly what will be shared, and nothing identifying', async () => {
+    const { page, ctx } = await open({ permissions: ['clipboard-read', 'clipboard-write'] });
+    await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' });
+    await page.locator('.rp').first().click();
+    ok(await page.locator('#reportDlg[open]').count() === 1, 'dialog did not open');
+    const text = await page.inputValue('#rpText');
+    ok(/^Finding: [a-z.-]+$/m.test(text) && /^Numbers: .+\d/m.test(text), 'missing finding or numbers: ' + text);
+    ok(/^Source types: .*(watch|phone)/m.test(text) && /^Scores: overall \d+/m.test(text) && /^App: \d+\.\d+\.\d+, /m.test(text), 'missing source types, scores or app: ' + text);
+    ok(!NAMES_OR_DATES.test(text), 'report contains a name, date, month or weekday:\n' + text);
+    const href = await page.getAttribute('#rpOpen', 'href'), u = new URL(href);
+    eq(u.origin + u.pathname, 'https://github.com/batool-fariha/smartwatch-polygraph/issues/new', 'issue url');
+    eq(u.searchParams.get('template'), 'false-positive.yml', 'template'); eq(u.searchParams.get('details'), text, 'the link carries exactly the text shown');
+    ok(!NAMES_OR_DATES.test(decodeURIComponent(u.search)), 'url contains a name or date');
+    await page.click('#rpCopy'); eq(await page.textContent('#rpCopy'), 'Copied', 'copy button');
+    eq(await page.evaluate(() => navigator.clipboard.readText()), text, 'clipboard');
+    await page.keyboard.press('Escape'); ok(await page.locator('#reportDlg[open]').count() === 0, 'Escape did not close it');
+    await ctx.close();
+  });
+  await test('the general report lists the findings by rule, closes on Close and on a backdrop click, and returns focus', async () => {
+    const { page, ctx } = await open();
+    await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' });
+    await page.click('#rpGen');
+    const text = await page.inputValue('#rpText');
+    ok(/^Finding: general/m.test(text) && /^Findings shown: .*x\d/m.test(text), text); ok(!NAMES_OR_DATES.test(text), 'general report leaks: ' + text);
+    await page.click('#reportDlg button[value="close"]'); ok(await page.locator('#reportDlg[open]').count() === 0, 'Close did not close');
+    eq(await page.evaluate(() => document.activeElement.id), 'rpGen', 'focus returns to the button that opened it');
+    await page.locator('.rp').nth(2).click(); await page.mouse.click(5, 5);
+    ok(await page.locator('#reportDlg[open]').count() === 0, 'a click outside did not close it');
+    await ctx.close();
+  });
+  await test('on a phone the dialog fits the screen and its buttons are tappable', async () => {
+    const { page, ctx } = await open(phoneCtx(375));
+    await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' });
+    await page.locator('.rp').first().click();
+    const r = await page.evaluate(() => { const d = document.getElementById('reportDlg').getBoundingClientRect(); return { w: Math.round(d.width), l: Math.round(d.left), r: Math.round(d.right), h: Math.round(d.height), btn: [...document.querySelectorAll('#reportDlg .dlg-b > *')].map((b) => Math.round(b.getBoundingClientRect().height)) }; });
+    ok(r.l >= 0 && r.r <= 375 && r.h <= 812, `dialog is off screen: ${JSON.stringify(r)}`); ok(r.btn.every((h) => h >= 44), 'buttons under 44px: ' + r.btn);
+    await ctx.close();
+  });
+
   console.log('\nAccessibility (axe-core, WCAG 2.2 A and AA plus best practices)');
-  for (const state of ['landing', 'results']) {
+  for (const state of ['landing', 'results', 'report dialog open']) {
     await test(`${state} has no violations`, async () => {
       const { page, ctx } = await open();
-      if (state === 'results') { await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' }); }
+      if (state !== 'landing') { await page.click('#demo'); await page.waitForSelector('#out', { state: 'visible' }); }
+      if (state === 'report dialog open') await page.locator('.rp').first().click();
       await page.waitForTimeout(4000);                  // let animations settle so contrast is measured on final colours
       await page.evaluate(axe.source);
       const v = await page.evaluate(async () => (await axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa', 'best-practice'] })).violations.map((x) => `${x.id} (${x.nodes.length}): ${x.nodes[0].target.join(' ')}`));

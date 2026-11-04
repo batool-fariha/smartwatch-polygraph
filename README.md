@@ -126,7 +126,9 @@ There are three layers. The first two need only Node 20 or later.
 node --test test/
 ```
 
-**Browser tests.** `e2e/e2e.js` drives the real page in Chromium: the landing page makes no third-party requests and loads its fonts; the sample result, filters, calendar and share card work; at 320, 375 and 414 px wide nothing scrolls sideways, every tap target is large enough and chart text stays readable, the jump bar lands on each section, and the share button hands the card to the native share sheet; an `export.xml` and the same export zipped give identical results; a wrong, truncated, empty or non-Health file shows a plain message and the page recovers; the keyboard paths work; and [axe-core](https://github.com/dequelabs/axe-core) finds no violations on the landing page or the results against WCAG 2.2 A and AA. With `--stress` it also generates a 70 MB export and loads it as XML and as a zip, failing if it takes over 90 seconds, freezes the page for over 3 seconds or uses over 1 GB.
+**Report tests.** `test/report.test.js` checks that every finding exposes a known rule id and only finite numbers, with no source names, years, months or weekdays.
+
+**Browser tests.** `e2e/e2e.js` drives the real page in Chromium: the landing page makes no third-party requests and loads its fonts; the sample result, filters, calendar and share card work; at 320, 375 and 414 px wide nothing scrolls sideways, every tap target is large enough and chart text stays readable, the jump bar lands on each section, and the share button hands the card to the native share sheet; the report dialog shows exactly what is shared, contains nothing identifying, builds the right GitHub link, copies to the clipboard, closes on Escape, Close or a click outside, and returns focus; an `export.xml` and the same export zipped give identical results; a wrong, truncated, empty or non-Health file shows a plain message and the page recovers; the keyboard paths work; and [axe-core](https://github.com/dequelabs/axe-core) finds no violations on the landing page or the results against WCAG 2.2 A and AA. With `--stress` it also generates a 70 MB export and loads it as XML and as a zip, failing if it takes over 90 seconds, freezes the page for over 3 seconds or uses over 1 GB.
 
 ```bash
 cd e2e
@@ -152,6 +154,14 @@ Zips made like an iPhone's (streamed entries, extra files ahead of `export.xml`,
 ## Privacy
 
 The page has no backend. The export is parsed in the tab and nothing is sent anywhere. The page makes no third-party requests at all: the fonts and the unzip library are served from the same origin, so no CDN or font service sees you open it.
+
+## Reporting a problem
+
+The thresholds have only been tested on synthetic data, so the most useful thing a real user can do is say when a finding was wrong. Every finding has a **Report a problem** link, and there is a general one under the findings for things it missed.
+
+It opens a dialog that shows the exact text of the report: the rule that fired (for example `heart-rate.spike`), the numbers behind it, the types of your sources (watch, phone, other), your scores, the app version and your browser. From there you can open a prefilled GitHub issue to review before posting, or copy the text and send it any other way.
+
+**Nothing is sent from the page.** The report never contains dates, source names, or any part of your file, and a test fails if a name, year, month or weekday ever appears in it. Reports use the [issue form](.github/ISSUE_TEMPLATE/false-positive.yml), which asks whether it was a false positive, misleading, or a miss, and for a sentence of context.
 
 ## Accessibility
 
@@ -183,6 +193,7 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `vendor/` | fflate, the unzip library, with its MIT licence |
 | `LICENSE` | MIT licence for the code |
 | `CHANGELOG.md` | What changed and when; releases follow Semantic Versioning |
+| `.github/ISSUE_TEMPLATE/false-positive.yml` | The form that reports open |
 | `.github/workflows/test.yml` | Runs all three test layers on every push and pull request |
 | `docs/` | README screenshots, captured at 2× resolution |
 

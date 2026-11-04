@@ -314,6 +314,20 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
   .heat{grid-template-rows:repeat(7,24px);grid-auto-columns:24px}.heat .hd,.heat i{width:24px;height:24px;border-radius:6px}
   .jump{margin:0 -24px}
 }
+/* report dialog */
+.acts{display:flex;flex-wrap:wrap;gap:0 26px}
+.rp-gen{margin:22px 0 0;font-size:14.5px;color:var(--muted)}.rp-gen .lnk{display:inline;margin:0;padding:12px 4px}
+.dlg{width:min(580px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0;border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--ink);box-shadow:0 30px 80px -20px rgba(23,23,26,.45)}
+.dlg::backdrop{background:rgba(23,23,26,.45)}
+.dlg-in{padding:28px}
+.dlg h3{font:400 30px/1.1 var(--serif);letter-spacing:-.01em;margin:0 0 10px}
+.dlg p{margin:0 0 16px;font-size:14.5px;color:var(--muted);line-height:1.5}
+.dlg-k{display:block;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.dlg textarea{width:100%;resize:none;border:1px solid var(--line);border-radius:12px;background:#f7f4ed;padding:12px 14px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);margin-bottom:14px}
+.dlg-n b{color:var(--ink);font-weight:600}
+.dlg-b{display:flex;flex-wrap:wrap;gap:10px}
+.dlg-b .btn,.dlg-b button{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+@media (max-width:600px){.dlg{margin:auto auto 16px}.dlg-in{padding:22px}.dlg-b .btn,.dlg-b button{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -544,6 +558,7 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
     <h2 class="rh" id="sec-findings">What it found</h2>
     <div class="filters" id="filters"></div>
     <div id="receipts"></div>
+    <p class="rp-gen">Think it got something wrong, or missed something it should have caught? <button type="button" class="lnk" id="rpGen">Report it</button></p>
 
     <h2 class="rh" id="sec-days">Every day</h2>
     <div class="panel heatwrap" id="heatwrap">
@@ -555,6 +570,17 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
     <p class="panel note"><b>Read this as a data-quality check.</b> A flag means two of your signals disagree, not that your watch is wrong. It isn’t a medical device, and the thresholds are heuristics.</p>
   </section>
 </main>
+
+<dialog id="reportDlg" class="dlg" aria-labelledby="rpTitle">
+  <form method="dialog" class="dlg-in">
+    <h3 id="rpTitle">Report a problem</h3>
+    <p>This opens a draft issue on GitHub for you to review before posting. Nothing is sent from this page, and your export never leaves your browser.</p>
+    <label class="dlg-k" for="rpText">Exactly what the draft will contain</label>
+    <textarea id="rpText" readonly rows="10"></textarea>
+    <p class="dlg-n"><b>Included:</b> the rule that fired, the numbers behind it, source types, your scores, the app version and your browser. <b>Not included:</b> dates, source names, or anything from your file. Prefer not to use GitHub? Copy the text and send it however you like.</p>
+    <div class="dlg-b"><a class="btn primary" id="rpOpen" target="_blank" rel="noopener" autofocus>Open GitHub issue</a><button type="button" class="ghost" id="rpCopy">Copy text</button><button type="submit" class="ghost" value="close">Close</button></div>
+  </form>
+</dialog>
 
 <footer>
   <div class="foot">
@@ -744,8 +770,45 @@ function chartHTML(r) {
   return c.type === 'sleep' ? sleepChart(c) : c.type === 'blip' ? blipChart(c) : c.type === 'steps' ? stepsChart(c) : c.type === 'gaps' ? gapChart(c) : '';
 }
 function receiptCard(r, i) {
-  return `<div class="panel rc in" style="animation-delay:${Math.min(i, 8) * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div class="body"><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}${r.sources && r.sources.length ? `<span class="src"> · ${esc(r.sources.join(', '))}</span>` : ''}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span>${chartHTML(r)}${r.fix ? `<p class="fixl"><b>What to do.</b> ${esc(r.fix)}</p>` : ''}${r.day != null ? `<button type="button" class="lnk" data-day="${r.day}">See this day</button>` : ''}</div></div>`;
+  return `<div class="panel rc in" style="animation-delay:${Math.min(i, 8) * 40}ms">${icon(KIND_ICON[r.kind] || 'warn')}<div class="body"><span class="tag">${r.kind === 'hr' ? 'heart rate' : r.kind}${r.sources && r.sources.length ? `<span class="src"> · ${esc(r.sources.join(', '))}</span>` : ''}</span><b>${esc(r.title)}</b><span class="d">${esc(r.detail)}</span>${chartHTML(r)}${r.fix ? `<p class="fixl"><b>What to do.</b> ${esc(r.fix)}</p>` : ''}<div class="acts">${r.day != null ? `<button type="button" class="lnk" data-day="${r.day}">See this day</button>` : ''}<button type="button" class="lnk rp" data-rp="${REPORT.receipts.indexOf(r)}">Report a problem</button></div></div></div>`;
 }
+/* Reporting a problem: the text is built from rule ids and numbers only, shown in full, and goes nowhere unless the user opens or copies it. */
+const REPO = 'batool-fariha/smartwatch-polygraph';
+function browserInfo() {
+  const u = navigator.userAgent;
+  const b = (m) => (m ? m[1] : null);
+  const name = /Edg\/(\d+)/.test(u) ? 'Edge ' + b(/Edg\/(\d+)/.exec(u)) : /Firefox\/(\d+)/.test(u) ? 'Firefox ' + b(/Firefox\/(\d+)/.exec(u)) : /Chrome\/(\d+)/.test(u) ? 'Chrome ' + b(/Chrome\/(\d+)/.exec(u)) : /Version\/(\d+).*Safari/.test(u) ? 'Safari ' + b(/Version\/(\d+)/.exec(u)) : 'unknown browser';
+  const os = /iPhone|iPad/.test(u) ? 'iOS' : /Android/.test(u) ? 'Android' : /Mac OS X/.test(u) ? 'macOS' : /Windows/.test(u) ? 'Windows' : /Linux/.test(u) ? 'Linux' : 'unknown OS';
+  return `${name} on ${os}`;
+}
+function reportDraft(r) {
+  const rep = REPORT, f = rep.facts, sc = rep.scores, sc1 = (v) => (v == null ? 'n/a' : Math.round(v));
+  const kindOf = (n) => (f.sources.find((s) => s.name === n) || {}).kind;
+  const kinds = [...new Set((r ? (r.sources || []) : f.sources.map((s) => s.name)).map(kindOf).filter(Boolean))];
+  const lines = [`Finding: ${r ? r.rule : 'general (not about one finding)'}`];
+  if (r) lines.push('Numbers: ' + Object.entries(r.data || {}).map(([k, v]) => `${k.replace(/([A-Z])/g, ' $1').toLowerCase()} ${v}`).join(', '));
+  else { const c = {}; rep.receipts.forEach((x) => { c[x.rule] = (c[x.rule] || 0) + 1; }); lines.push('Findings shown: ' + (Object.entries(c).map(([k, v]) => `${k} x${v}`).join(', ') || 'none')); }
+  lines.push(`Source types: ${kinds.join(', ') || 'unknown'}`);
+  lines.push(`Scores: overall ${sc1(sc.overall)}, sleep ${sc1(sc.sleep)}, steps ${sc1(sc.steps)}, heart rate ${sc1(sc.hr)}, coverage ${sc1(sc.coverage)}`);
+  lines.push(`Export: ${rep.span.days} days, ${num(rep.counts.hr + rep.counts.steps + rep.counts.sleep)} records, ${f.tzChanges} UTC offset changes`);
+  lines.push(`App: ${WearableTrust.version}, ${browserInfo()}`);
+  const text = lines.join('\n'), url = new URL(`https://github.com/${REPO}/issues/new`);
+  url.searchParams.set('template', 'false-positive.yml'); url.searchParams.set('title', 'Report: ' + (r ? r.rule : 'general')); url.searchParams.set('details', text);
+  return { text, href: url.toString() };
+}
+function openReport(r) {
+  const d = reportDraft(r);
+  $('#rpText').value = d.text; $('#rpOpen').href = d.href; $('#rpCopy').textContent = 'Copy text';
+  $('#rpTitle').textContent = r ? 'Report this finding' : 'Report a problem';
+  $('#reportDlg').showModal(); $('#rpText').scrollTop = 0;
+}
+$('#rpCopy').addEventListener('click', async () => {
+  const t = $('#rpText'), b = $('#rpCopy');
+  try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); }
+  b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy text'; }, 1800);
+});
+$('#reportDlg').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });   // a click on the backdrop closes it
+
 function renderSources(rep) {
   const f = rep.facts, list = f.sources || [], o = f.stepOverlap || {}, box = $('#srcs');
   $('#srcsec').style.display = list.length ? '' : 'none';
@@ -799,7 +862,11 @@ function openDay(i, scroll) {
 let wasCompact = compact();
 addEventListener('resize', () => { const k = compact(); if (k !== wasCompact && REPORT) { wasCompact = k; renderReceipts(); } });
 $('#filters').addEventListener('click', (e) => { const b = e.target.closest('.fb'); if (b) { FILTER = b.dataset.k; renderReceipts(); } });
-$('#receipts').addEventListener('click', (e) => { const b = e.target.closest('.lnk'); if (b) openDay(+b.dataset.day - REPORT.daily[0].day, true); });
+$('#receipts').addEventListener('click', (e) => {
+  const rp = e.target.closest('.rp'); if (rp) { openReport(REPORT.receipts[+rp.dataset.rp]); return; }
+  const b = e.target.closest('.lnk[data-day]'); if (b) openDay(+b.dataset.day - REPORT.daily[0].day, true);
+});
+$('#rpGen').addEventListener('click', () => openReport(null));
 $('#heat').addEventListener('click', (e) => { const b = e.target.closest('.hd'); if (b) openDay(+b.dataset.i, false); });
 
 function render(rep) {
