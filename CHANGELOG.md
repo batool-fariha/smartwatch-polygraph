@@ -5,6 +5,7 @@ All notable changes to Smartwatch Polygraph. The format follows [Keep a Changelo
 ## Unreleased
 
 ### Added
+- Project documentation: `CONTRIBUTING.md` (setup, the three test layers, synthetic exports, the privacy rules and how to add a rule with its tests), `SECURITY.md`, `CODE_OF_CONDUCT.md` and a pull request template.
 - A privacy-safe way to report false positives and misses. Every finding has a **Report a problem** link, and there is a general one for things it missed. A dialog shows exactly what a report contains (the rule, the numbers behind it, source types, scores, app version and browser, never dates, source names or file contents) and opens a prefilled GitHub issue form or copies the text. Nothing is sent from the page, and a test fails if a name, year, month or weekday ever appears in a report.
 
 ## [0.1.0] - 2026-11-05

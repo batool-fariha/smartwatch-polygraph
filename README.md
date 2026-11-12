@@ -192,8 +192,10 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 | `fonts/` | Instrument Serif and Inter Tight (WOFF2, Latin subset) with their SIL OFL licences |
 | `vendor/` | fflate, the unzip library, with its MIT licence |
 | `LICENSE` | MIT licence for the code |
+| `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` | How to contribute, how to report a vulnerability privately, and the ground rules |
 | `CHANGELOG.md` | What changed and when; releases follow Semantic Versioning |
 | `.github/ISSUE_TEMPLATE/false-positive.yml` | The form that reports open |
+| `.github/PULL_REQUEST_TEMPLATE.md` | The checklist for pull requests |
 | `.github/workflows/test.yml` | Runs all three test layers on every push and pull request |
 | `docs/` | README screenshots, captured at 2× resolution |
 
