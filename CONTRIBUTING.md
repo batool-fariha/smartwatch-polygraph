@@ -36,6 +36,7 @@ node e2e.js --stress       # adds the large-export run, as CI does
 |---|---|
 | `analyzer.js` | Streaming parser and the checks (runs in the browser and in Node) |
 | `fit.js` | Garmin FIT decoder and adapter into analyzer records |
+| `fitbit.js` | Experimental Fitbit Takeout adapter |
 | `index.html` | The interface: hero animation, upload, results, share card |
 | `sample.js` | Synthetic export generator with known faults |
 | `test/` | Engine test and unit tests for every rule |
@@ -73,7 +74,7 @@ CI runs the same two commands on every push and pull request.
 ## Good first contributions
 
 - Calibrate thresholds against a real export you own, and report only the numbers (see the issue on calibration).
-- Add a Fitbit (Google Takeout) adapter.
+- Confirm the Fitbit adapter's assumptions (top of `fitbit.js`) against a Takeout export you own, sharing only file names, field names and value types.
 - Check FIT support against a real Garmin activity file you own, and report only whether it read and what counts it gave.
 
 ## Releases

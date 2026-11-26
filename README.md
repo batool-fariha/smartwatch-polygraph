@@ -104,6 +104,14 @@ export.zip ─▶ stream unzip ─▶ tag parser ─▶ analyzer ─▶ report
 - **Steps:** only for running and walking sessions. FIT cadence counts one foot, so steps per minute is twice the average cadence in that minute.
 - **Workouts:** each session becomes a workout.
 
+**Fitbit (experimental).** `fitbit.js` reads the `heart_rate-*.json`, `steps-*.json` and `sleep-*.json` files from a Google Takeout export (`Fitbit/Global Export Data`). You can choose the Takeout `.zip` or the JSON files themselves. Fitbit hasn't published this layout, so the adapter follows community descriptions, and every assumption is listed at the top of `fitbit.js`:
+
+- Heart-rate and step times are read as UTC.
+- Sleep times are read as local time.
+- Local time uses your browser's time zone.
+
+If a real export doesn't match, it may misread times. Please report the file *structure* (names, field names, value types, with every value replaced), never the data.
+
 You can choose one or more `.fit` files, or the `.zip` from Garmin Connect's **Export Original**. Activity files only cover workouts, so the coverage score is left out for FIT-only input instead of counting the hours between runs as gaps.
 
 The file is read as a stream, decoded in chunks and scanned for `Record` and `Workout` tags, so only the records that matter are kept in memory. Steps are held in compact per-day arrays, so memory grows slowly with the size of the export. `analyzer.js` has no browser dependencies and runs in Node as well, which is how the tests run.
@@ -180,10 +188,10 @@ Checked with [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.2 A and A
 - **Tested on synthetic data only.** The thresholds have not yet been calibrated against real exports, so expect false positives and misses until they are.
 - **Offsets between records are inferred.** The timeline of UTC offsets comes from the records themselves, so if a clock change or a flight falls in a stretch with no data, the switch is placed at the first record after it, up to a few hours late.
 - **It finds contradictions, not sensor error.** Two signals disagreeing means something is off. It doesn't say which one, or whether the sensor is accurate.
-- **Apple Health and Garmin FIT activity files.** FIT support reads workouts only: no sleep, no all-day steps, and no phone to cross-check steps against, so the sleep and double-count checks need an Apple Health export. It is tested on synthetic FIT files built to the public protocol, not yet on files from a real Garmin. Garmin's account export (sleep and daily summaries) is still not read. Fitbit exports (Google Takeout) are daily JSON files whose exact schema could not be confirmed from public documentation.
+- **Apple Health and Garmin FIT activity files.** FIT support reads workouts only: no sleep, no all-day steps, and no phone to cross-check steps against, so the sleep and double-count checks need an Apple Health export. It is tested on synthetic FIT files built to the public protocol, not yet on files from a real Garmin. Garmin's account export (sleep and daily summaries) is still not read. Fitbit (Google Takeout) support is experimental: the JSON layout and which times are UTC are assumptions from community write-ups, not confirmed on a real export.
 - **Not a medical device.** It checks data quality and doesn't diagnose, monitor or advise.
 
-Next: calibrate on real exports, check FIT support against real Garmin files, and add a Fitbit adapter.
+Next: calibrate on real exports, and check the Garmin and Fitbit adapters against real files.
 
 ## Repository
 
@@ -191,6 +199,7 @@ Next: calibrate on real exports, check FIT support against real Garmin files, an
 |---|---|
 | `index.html` | The interface: hero animation, upload, results, share card |
 | `analyzer.js` | Streaming parser and the checks (browser and Node) |
+| `fitbit.js` | Experimental Fitbit Google Takeout adapter, with its assumed file layout documented at the top |
 | `fit.js` | Garmin FIT decoder and the adapter that maps FIT activity files into analyzer records |
 | `sample.js` | Synthetic export generator with known faults |
 | `test/` | Engine test, unit tests for every rule, and FIT tests with a synthetic FIT encoder (`test/fit-encode.js`) |

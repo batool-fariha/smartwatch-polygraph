@@ -390,9 +390,9 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
       <div class="checkgrid">
         <section class="drop in" id="drop" style="animation-delay:.08s">
       <h3>Drop your export here</h3>
-      <p>Apple Health: export.zip or export.xml. Garmin: one or more .fit activity files, or the .zip from “Export Original”.</p>
+      <p>Apple Health: export.zip or export.xml. Garmin: one or more .fit activity files, or the .zip from “Export Original”. Fitbit (experimental): the Google Takeout .zip.</p>
       <div class="row">
-        <input type="file" id="file" accept=".zip,.xml,.fit" multiple class="sr">
+        <input type="file" id="file" accept=".zip,.xml,.fit,.json" multiple class="sr">
         <label for="file" class="btn primary" tabindex="0" id="pick">Choose file</label>
         <button class="ghost" id="demo">Use sample data</button>
       </div>
@@ -533,7 +533,7 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
       </div>
       <div class="limits">
         <div><b>Contradictions, not errors</b><p>Two signals disagreeing means something is off. It doesn’t say which one, or whether the sensor is accurate.</p></div>
-        <div><b>Apple Health and Garmin FIT</b><p>Garmin activity files give heart rate, and steps for runs and walks, during workouts only, so sleep and all-day checks need an Apple Health export. Fitbit isn’t supported yet.</p></div>
+        <div><b>Apple Health and Garmin FIT</b><p>Garmin activity files give heart rate, and steps for runs and walks, during workouts only, so sleep and all-day checks need an Apple Health export. Fitbit support is experimental: its export layout isn’t documented, so it may misread some files.</p></div>
         <div><b>Not a medical device</b><p>It checks data quality. It doesn’t diagnose, monitor or advise on anything.</p></div>
       </div>
     </section>
@@ -595,6 +595,7 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
 <script src="vendor/fflate.min.js"></script>
 <script src="analyzer.js"></script>
 <script src="fit.js"></script>
+<script src="fitbit.js"></script>
 <script src="sample.js"></script>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -662,6 +663,7 @@ function start(list) {
   const files = Array.from(list || []);
   if (!files.length) return;
   if (files.length > 1 && files.every((f) => /\.fit$/i.test(f.name))) return runFit(files);
+  if (files.some((f) => WearableFitbit.kind(f.name))) return runFitbit(files.filter((f) => WearableFitbit.kind(f.name)));
   run(files[0]);
 }
 $('#pick').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('#file').click(); } });
@@ -689,6 +691,22 @@ async function runFit(files) {
     render(rep);
   } catch (e) { fail('Could not read that FIT file: ' + e.message); }
 }
+async function runFitbit(files) {
+  $('#err').style.display = 'none'; $('#prog').style.display = 'block';
+  const an = WearableTrust.createAnalyzer();
+  try {
+    for (let i = 0; i < files.length; i++) {
+      $('#pbar').style.width = Math.min(99, (i / files.length) * 100) + '%';
+      $('#ptxt').textContent = `Reading file ${i + 1} of ${files.length}`;
+      WearableFitbit.feed(files[i].name, await files[i].text(), an);
+      if (i % 20 === 0) await new Promise((r) => setTimeout(r));
+    }
+    $('#ptxt').textContent = 'Cross-checking your signals…';
+    const rep = an.finish();
+    if (rep.empty || (!rep.counts.hr && !rep.counts.steps && !rep.counts.sleep)) return fail('No heart-rate, step or sleep readings found in those Fitbit files.');
+    render(rep);
+  } catch (e) { fail('Could not read that Fitbit file: ' + e.message); }
+}
 function fail(msg) { $('#prog').style.display = 'none'; const e = $('#err'); e.textContent = msg; e.style.display = 'block'; }
 
 async function run(file) {
@@ -712,13 +730,17 @@ async function run(file) {
     if (isZip) {
       if (!window.fflate) return fail('Could not load the unzip helper (needs internet once). Unzip the file yourself and drop export.xml instead.');
       let found = false;
-      const fits = [];
+      const fits = [], fitbit = [];
       const unzip = new fflate.Unzip();
       unzip.register(fflate.UnzipInflate); unzip.register(fflate.UnzipPassThrough);
       unzip.onfile = (f) => {
         if (/(^|\/)export\.xml$/.test(f.name)) {
           found = true;
           f.ondata = (err, chunk, fin) => { if (err) throw err; parser.feed(dec.decode(chunk, { stream: !fin })); };
+          f.start();
+        } else if (WearableFitbit.kind(f.name)) {
+          const parts = []; fitbit.push([f.name, parts]);
+          f.ondata = (err, chunk) => { if (err) throw err; parts.push(chunk); };
           f.start();
         } else if (/\.fit$/i.test(f.name)) {
           const parts = []; fits.push(parts);
@@ -731,8 +753,9 @@ async function run(file) {
         if (done) { unzip.push(new Uint8Array(0), true); break; }
         read += value.length; unzip.push(value, false); await tick();
       }
-      if (!found && fits.length) { an.options.workoutOnly = true; let n = 0; fits.forEach((parts) => { const b = join(parts); if (WearableFit.isFit(b)) { WearableFit.feed(b, an); n++; } }); if (!n) return fail('The .fit files in that zip could not be read.'); }
-      else if (!found) return fail('No export.xml or .fit files found inside that zip. Is it an Apple Health or Garmin export?');
+      if (!found && fitbit.length) { const td = new TextDecoder('utf-8'); for (const [name, parts] of fitbit) WearableFitbit.feed(name, td.decode(join(parts)), an); }
+      else if (!found && fits.length) { an.options.workoutOnly = true; let n = 0; fits.forEach((parts) => { const b = join(parts); if (WearableFit.isFit(b)) { WearableFit.feed(b, an); n++; } }); if (!n) return fail('The .fit files in that zip could not be read.'); }
+      else if (!found) return fail('No export.xml, .fit or Fitbit files found inside that zip. Is it an Apple Health, Garmin or Fitbit export?');
     } else {
       for (;;) {
         const { done, value } = await reader.read();
