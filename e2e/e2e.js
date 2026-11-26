@@ -153,6 +153,26 @@ async function upload(page, file) {
     await a.ctx.close(); await b.ctx.close();
   });
 
+  await test('Fitbit Takeout JSON files and the same files in a Takeout zip give identical results', async () => {
+    const a = await open(), b = await open();
+    const p2 = (n) => String(n).padStart(2, '0');
+    const us = (ms) => { const d = new Date(ms); return `${p2(d.getUTCMonth() + 1)}/${p2(d.getUTCDate())}/${String(d.getUTCFullYear()).slice(2)} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`; };
+    const files = {};
+    for (let d = 1; d <= 3; d++) {
+      const day = `2026-09-0${d}`, t0 = Date.parse(day + 'T00:00:00Z');
+      files[`heart_rate-${day}.json`] = JSON.stringify(Array.from({ length: 1440 }, (_, m) => ({ dateTime: us(t0 + m * 60000), value: { bpm: 60 + (m % 9), confidence: 2 } })));
+      files[`steps-${day}.json`] = JSON.stringify(Array.from({ length: 1440 }, (_, m) => ({ dateTime: us(t0 + m * 60000), value: String(m >= 420 && m < 480 ? 90 : 0) })));
+    }
+    await a.page.setInputFiles('#file', Object.entries(files).map(([n, t]) => write(n, t)));
+    await a.page.waitForFunction(() => getComputedStyle(document.getElementById('out')).display !== 'none' || getComputedStyle(document.getElementById('err')).display !== 'none');
+    const x = await a.page.evaluate(() => ({ done: getComputedStyle(document.getElementById('out')).display !== 'none', err: document.getElementById('err').textContent, sum: document.getElementById('sum').textContent }));
+    const z = await upload(b.page, write('takeout.zip', zip(Object.fromEntries(Object.entries(files).map(([n, t]) => [`Takeout/Fitbit/Global Export Data/${n}`, u8(t)])))));
+    ok(x.done && z.done, 'results not shown: ' + x.err + ' / ' + z.err);
+    eq(z.sum, x.sum, 'summary');
+    eq(a.errors.length + b.errors.length, 0, 'errors');
+    await a.ctx.close(); await b.ctx.close();
+  });
+
   await test('an export.xml and the same export zipped give identical results', async () => {
     const a = await open(), b = await open();
     const x = await upload(a.page, write('export.xml', sampleXml));
@@ -164,7 +184,7 @@ async function upload(page, file) {
   });
 
   const bad = [
-    ['a zip with no export.xml', () => write('wrong.zip', zip({ 'photos/readme.txt': u8('hi') })), /No export\.xml or \.fit files found/],
+    ['a zip with no export.xml', () => write('wrong.zip', zip({ 'photos/readme.txt': u8('hi') })), /No export\.xml, \.fit or Fitbit files found/],
     ['a truncated zip', () => write('trunc.zip', zip({ 'apple_health_export/export.xml': u8(sampleXml) }).subarray(0, 4000)), /Could not read that file/],
     ['an empty file', () => write('empty.xml', ''), /No steps, heart-rate or sleep records/],
     ['an html file', () => write('page.xml', '<html><body>hello</body></html>'), /No steps, heart-rate or sleep records/],
