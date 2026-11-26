@@ -390,9 +390,9 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
       <div class="checkgrid">
         <section class="drop in" id="drop" style="animation-delay:.08s">
       <h3>Drop your export here</h3>
-      <p>export.zip or export.xml, straight from the Health app.</p>
+      <p>Apple Health: export.zip or export.xml. Garmin: one or more .fit activity files, or the .zip from “Export Original”.</p>
       <div class="row">
-        <input type="file" id="file" accept=".zip,.xml" class="sr">
+        <input type="file" id="file" accept=".zip,.xml,.fit" multiple class="sr">
         <label for="file" class="btn primary" tabindex="0" id="pick">Choose file</label>
         <button class="ghost" id="demo">Use sample data</button>
       </div>
@@ -533,7 +533,7 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
       </div>
       <div class="limits">
         <div><b>Contradictions, not errors</b><p>Two signals disagreeing means something is off. It doesn’t say which one, or whether the sensor is accurate.</p></div>
-        <div><b>Apple Health only, for now</b><p>Fitbit and Garmin exports are laid out differently, and Garmin’s doesn’t include minute-level data.</p></div>
+        <div><b>Apple Health and Garmin FIT</b><p>Garmin activity files give heart rate, and steps for runs and walks, during workouts only, so sleep and all-day checks need an Apple Health export. Fitbit isn’t supported yet.</p></div>
         <div><b>Not a medical device</b><p>It checks data quality. It doesn’t diagnose, monitor or advise on anything.</p></div>
       </div>
     </section>
@@ -594,6 +594,7 @@ h2.rh{scroll-margin-top:calc(var(--navh) + 64px)}
 
 <script src="vendor/fflate.min.js"></script>
 <script src="analyzer.js"></script>
+<script src="fit.js"></script>
 <script src="sample.js"></script>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -654,14 +655,40 @@ document.querySelectorAll('[data-go]').forEach((a) => a.addEventListener('click'
 const drop = $('#drop');
 ['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove('over'); }));
-drop.addEventListener('drop', (ev) => { const f = ev.dataTransfer.files[0]; if (f) run(f); });
-$('#file').addEventListener('change', (ev) => { const f = ev.target.files[0]; if (f) run(f); });
+drop.addEventListener('drop', (ev) => start(ev.dataTransfer.files));
+$('#file').addEventListener('change', (ev) => start(ev.target.files));
+/* Several .fit files are read together; anything else is read as one file. */
+function start(list) {
+  const files = Array.from(list || []);
+  if (!files.length) return;
+  if (files.length > 1 && files.every((f) => /\.fit$/i.test(f.name))) return runFit(files);
+  run(files[0]);
+}
 $('#pick').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('#file').click(); } });
 $('#demo').addEventListener('click', () => run(new File([WearableSample.generate({ days: 60, seed: 7 }).xml], 'sample-export.xml')));
 $('#heroDemo').addEventListener('click', () => $('#demo').click());
 $('#again').addEventListener('click', () => { showLanding(); window.scrollTo(0, 0); });
 $('#share').addEventListener('click', shareCard);
 
+const join = (parts) => { const out = new Uint8Array(parts.reduce((a, p) => a + p.length, 0)); let o = 0; parts.forEach((p) => { out.set(p, o); o += p.length; }); return out; };
+async function runFit(files) {
+  $('#err').style.display = 'none'; $('#prog').style.display = 'block';
+  const an = WearableTrust.createAnalyzer({ workoutOnly: true });
+  try {
+    for (let i = 0; i < files.length; i++) {
+      $('#pbar').style.width = Math.min(99, (i / files.length) * 100) + '%';
+      $('#ptxt').textContent = `Reading file ${i + 1} of ${files.length}`;
+      const b = new Uint8Array(await files[i].arrayBuffer());
+      if (!WearableFit.isFit(b)) return fail(`${files[i].name} is not a FIT file.`);
+      WearableFit.feed(b, an);
+      await new Promise((r) => setTimeout(r));
+    }
+    $('#ptxt').textContent = 'Cross-checking your signals…';
+    const rep = an.finish();
+    if (rep.empty || (!rep.counts.hr && !rep.counts.steps)) return fail('No heart-rate or step records found in those FIT files. Activity files work; settings and course files do not.');
+    render(rep);
+  } catch (e) { fail('Could not read that FIT file: ' + e.message); }
+}
 function fail(msg) { $('#prog').style.display = 'none'; const e = $('#err'); e.textContent = msg; e.style.display = 'block'; }
 
 async function run(file) {
@@ -669,6 +696,7 @@ async function run(file) {
   const an = WearableTrust.createAnalyzer(), parser = WearableTrust.createParser(an);
   const dec = new TextDecoder('utf-8');
   const reader = file.stream().getReader();
+  if (/\.fit$/i.test(file.name)) return runFit([file]);
   const isZip = /\.zip$/i.test(file.name);
   let read = 0, last = 0;
   const tick = async () => {
@@ -684,12 +712,17 @@ async function run(file) {
     if (isZip) {
       if (!window.fflate) return fail('Could not load the unzip helper (needs internet once). Unzip the file yourself and drop export.xml instead.');
       let found = false;
+      const fits = [];
       const unzip = new fflate.Unzip();
       unzip.register(fflate.UnzipInflate); unzip.register(fflate.UnzipPassThrough);
       unzip.onfile = (f) => {
         if (/(^|\/)export\.xml$/.test(f.name)) {
           found = true;
           f.ondata = (err, chunk, fin) => { if (err) throw err; parser.feed(dec.decode(chunk, { stream: !fin })); };
+          f.start();
+        } else if (/\.fit$/i.test(f.name)) {
+          const parts = []; fits.push(parts);
+          f.ondata = (err, chunk) => { if (err) throw err; parts.push(chunk); };
           f.start();
         }
       };
@@ -698,7 +731,8 @@ async function run(file) {
         if (done) { unzip.push(new Uint8Array(0), true); break; }
         read += value.length; unzip.push(value, false); await tick();
       }
-      if (!found) return fail('No export.xml found inside that zip. Is it the Apple Health export?');
+      if (!found && fits.length) { an.options.workoutOnly = true; let n = 0; fits.forEach((parts) => { const b = join(parts); if (WearableFit.isFit(b)) { WearableFit.feed(b, an); n++; } }); if (!n) return fail('The .fit files in that zip could not be read.'); }
+      else if (!found) return fail('No export.xml or .fit files found inside that zip. Is it an Apple Health or Garmin export?');
     } else {
       for (;;) {
         const { done, value } = await reader.read();
@@ -709,7 +743,7 @@ async function run(file) {
     $('#ptxt').textContent = 'Cross-checking your signals…';
     await new Promise((r) => setTimeout(r, 30));
     const rep = an.finish();
-    if (rep.empty || (!rep.counts.hr && !rep.counts.steps && !rep.counts.sleep)) return fail('No steps, heart-rate or sleep records found. Is this an Apple Health export.xml?');
+    if (rep.empty || (!rep.counts.hr && !rep.counts.steps && !rep.counts.sleep)) return fail('No steps, heart-rate or sleep records found. Is this an Apple Health export.xml or a Garmin .fit file?');
     render(rep);
   } catch (e) { fail('Could not read that file: ' + e.message); }
 }
@@ -886,7 +920,7 @@ function render(rep) {
     ['Sleep', 'moon', rep.scores.sleep, f.nights ? `${f.flaggedNights} of ${f.nights} nights conflict with heart rate, movement or a second source. Your usual sleeping pulse: ${Math.round(f.medianSleepHr)} bpm.` : 'No sleep records.'],
     ['Steps', 'steps', rep.scores.steps, f.rawSteps ? `The raw export totals ${f.rawSteps.toLocaleString()} steps; real movement was about ${f.dedupSteps.toLocaleString()} (${Math.round(f.inflation * 100)}% inflated by phone + watch overlap).` : 'No step records.'],
     ['Heart rate', 'heart', rep.scores.hr, f.hrSamples >= 100 ? `${f.hrImpossible} impossible readings and ${f.hrBlips} single-reading spikes across ${f.hrSamples.toLocaleString()} samples.` : 'Not enough heart-rate data.'],
-    ['Coverage', 'gap', rep.scores.coverage, f.coverageDays ? `Watch data present ${f.avgHoursWithData.toFixed(1)} h/day on average.${f.recurringGap ? ` It goes dark around ${String(f.recurringGap.hour).padStart(2, '0')}:00 on ${f.recurringGap.days} days.` : ''}${f.darkDays ? ` ${f.darkDays} day${f.darkDays === 1 ? '' : 's'} with nothing.` : ''}` : 'No coverage data.']
+    ['Coverage', 'gap', rep.scores.coverage, f.coverageDays ? `Watch data present ${f.avgHoursWithData.toFixed(1)} h/day on average.${f.recurringGap ? ` It goes dark around ${String(f.recurringGap.hour).padStart(2, '0')}:00 on ${f.recurringGap.days} days.` : ''}${f.darkDays ? ` ${f.darkDays} day${f.darkDays === 1 ? '' : 's'} with nothing.` : ''}` : (rep.workoutOnly ? 'Not scored: Garmin activity files only cover workouts, so the hours in between are not gaps.' : 'No coverage data.')]
   ];
   $('#cards').innerHTML = cards.map(([k, ic, s, t], i) => {
     const has = s !== null;

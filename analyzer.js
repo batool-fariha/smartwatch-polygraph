@@ -78,7 +78,10 @@
   }
 
   /* ---------- analyzer ---------- */
-  function createAnalyzer() {
+  // options.workoutOnly: the data only covers workouts (Garmin FIT activity files), so hours without data
+  // are expected and the coverage score and gap findings are left out instead of scoring them as gaps.
+  function createAnalyzer(opts) {
+    const options = Object.assign({ workoutOnly: false }, opts);
     const steps = new Map(); // day index -> Float32Array(3 * 1440): watch, phone, other per minute
     const hrRaw = { t: [], v: [], c: [], n: [] };
     const names = [], nameIdx = new Map(), srcCls = [], srcStat = [];   // one entry per sourceName
@@ -355,7 +358,7 @@
           const idx = h - firstDay * 24; if (idx >= 0 && idx < hours.length) hours[idx] = 1;
         }
       }
-      let fh = hours.indexOf(1), lh = hours.lastIndexOf(1);
+      let fh = options.workoutOnly ? -1 : hours.indexOf(1), lh = hours.lastIndexOf(1);
       let coverageScore = null, recurring = null, darkRuns = [], hoursLost = 0, coverageDays = 0, avgHours = 0;
       const covByDay = new Map();
       const topHr = names.length ? names.reduce((best, _, i) => (srcStat[i].hr > srcStat[best].hr ? i : best), 0) : -1;
@@ -431,6 +434,7 @@
       return {
         empty: false, counts,
         span: { firstDay, lastDay, days: nDays, from: fmtDay(firstDay), to: fmtDay(lastDay) },
+        workoutOnly: options.workoutOnly,
         scores: { overall, sleep: sleepScore, steps: stepsScore, hr: hrScore, coverage: coverageScore },
         grade,
         facts: {
@@ -448,7 +452,7 @@
       };
     }
 
-    return { addRecord, addWorkout, finish, counts };
+    return { addRecord, addWorkout, finish, counts, options };
   }
 
   return { createAnalyzer, createParser, fmtDay, fmtDur, hhmm, version: VERSION };

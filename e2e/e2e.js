@@ -6,6 +6,7 @@ const { chromium } = require('playwright-core');
 const axe = require('axe-core');
 const fflate = require('../vendor/fflate.min.js');
 const { generate } = require('../sample.js');
+const fitFile = require('../test/fit-encode.js').activity;
 
 const ROOT = path.resolve(__dirname, '..');
 const STRESS = process.argv.includes('--stress');
@@ -139,6 +140,19 @@ async function upload(page, file) {
   });
 
   console.log('\nUploads');
+  await test('a Garmin .fit file and the same file in an Export Original zip give identical results', async () => {
+    const a = await open(), b = await open();
+    const run = fitFile({ minutes: 30 });
+    const x = await upload(a.page, write('run.fit', run));
+    const z = await upload(b.page, write('garmin.zip', zip({ '123456789_ACTIVITY.fit': new Uint8Array(run) })));
+    ok(x.done && z.done, 'results not shown: ' + x.err + ' / ' + z.err);
+    eq(z.sum, x.sum, 'summary'); eq(z.span, x.span, 'span');
+    const cov = await a.page.evaluate(() => document.getElementById('out').innerText.includes('Not scored: Garmin activity files only cover workouts'));
+    ok(cov, 'coverage explained as not scored');
+    eq(a.errors.length + b.errors.length, 0, 'errors');
+    await a.ctx.close(); await b.ctx.close();
+  });
+
   await test('an export.xml and the same export zipped give identical results', async () => {
     const a = await open(), b = await open();
     const x = await upload(a.page, write('export.xml', sampleXml));
@@ -150,7 +164,7 @@ async function upload(page, file) {
   });
 
   const bad = [
-    ['a zip with no export.xml', () => write('wrong.zip', zip({ 'photos/readme.txt': u8('hi') })), /No export\.xml found/],
+    ['a zip with no export.xml', () => write('wrong.zip', zip({ 'photos/readme.txt': u8('hi') })), /No export\.xml or \.fit files found/],
     ['a truncated zip', () => write('trunc.zip', zip({ 'apple_health_export/export.xml': u8(sampleXml) }).subarray(0, 4000)), /Could not read that file/],
     ['an empty file', () => write('empty.xml', ''), /No steps, heart-rate or sleep records/],
     ['an html file', () => write('page.xml', '<html><body>hello</body></html>'), /No steps, heart-rate or sleep records/],
