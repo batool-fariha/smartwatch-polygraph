@@ -98,6 +98,14 @@ export.zip ─▶ stream unzip ─▶ tag parser ─▶ analyzer ─▶ report
                                             workouts
 ```
 
+**Garmin FIT files.** `fit.js` is a small FIT decoder written for this project, so there is no third-party parser to vet. It reads `record` messages (heart rate and cadence), `session` (sport and workout span), `activity` (the wearer's UTC offset) and `file_id` (maker), and turns them into the same records the Apple Health parser produces:
+
+- **Heart rate:** the first valid reading in each minute. It is sampled, not smoothed, so a bad reading still shows up.
+- **Steps:** only for running and walking sessions. FIT cadence counts one foot, so steps per minute is twice the average cadence in that minute.
+- **Workouts:** each session becomes a workout.
+
+You can choose one or more `.fit` files, or the `.zip` from Garmin Connect's **Export Original**. Activity files only cover workouts, so the coverage score is left out for FIT-only input instead of counting the hours between runs as gaps.
+
 The file is read as a stream, decoded in chunks and scanned for `Record` and `Workout` tags, so only the records that matter are kept in memory. Steps are held in compact per-day arrays, so memory grows slowly with the size of the export. `analyzer.js` has no browser dependencies and runs in Node as well, which is how the tests run.
 
 ## Run it
@@ -172,10 +180,10 @@ Checked with [axe-core](https://github.com/dequelabs/axe-core) (WCAG 2.2 A and A
 - **Tested on synthetic data only.** The thresholds have not yet been calibrated against real exports, so expect false positives and misses until they are.
 - **Offsets between records are inferred.** The timeline of UTC offsets comes from the records themselves, so if a clock change or a flight falls in a stretch with no data, the switch is placed at the first record after it, up to a few hours late.
 - **It finds contradictions, not sensor error.** Two signals disagreeing means something is off. It doesn't say which one, or whether the sensor is accurate.
-- **Apple Health only.** Fitbit exports (Google Takeout) are daily JSON files whose exact schema could not be confirmed from public documentation. Garmin's account export has sleep and daily summaries but no minute-level heart rate or steps, so the headline checks can't run on it.
+- **Apple Health and Garmin FIT activity files.** FIT support reads workouts only: no sleep, no all-day steps, and no phone to cross-check steps against, so the sleep and double-count checks need an Apple Health export. It is tested on synthetic FIT files built to the public protocol, not yet on files from a real Garmin. Garmin's account export (sleep and daily summaries) is still not read. Fitbit exports (Google Takeout) are daily JSON files whose exact schema could not be confirmed from public documentation.
 - **Not a medical device.** It checks data quality and doesn't diagnose, monitor or advise.
 
-Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files for the checks that need minute-level data.
+Next: calibrate on real exports, check FIT support against real Garmin files, and add a Fitbit adapter.
 
 ## Repository
 
@@ -183,8 +191,9 @@ Next: calibrate on real exports, add a Fitbit adapter, and read Garmin FIT files
 |---|---|
 | `index.html` | The interface: hero animation, upload, results, share card |
 | `analyzer.js` | Streaming parser and the checks (browser and Node) |
+| `fit.js` | Garmin FIT decoder and the adapter that maps FIT activity files into analyzer records |
 | `sample.js` | Synthetic export generator with known faults |
-| `test/` | Engine test and unit tests for every rule |
+| `test/` | Engine test, unit tests for every rule, and FIT tests with a synthetic FIT encoder (`test/fit-encode.js`) |
 | `e2e/` | Browser tests (Playwright and axe-core), with their own `package.json` |
 | `tools/make_big_export.py` | Generates 300 MB to 1 GB synthetic exports for stress testing |
 | `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` | Icons |
